@@ -1,6 +1,18 @@
-.list__wrapper {
+.list__list-wrapper {
 
     & > * {
         margin-bottom: 10px;
     }
+}
+
+.list__item-placeholder {
+    box-sizing: border-box;
+    border: 2px dashed black;
+    background-color: white;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.list__item--animation {
+    transition: all 0.2s cubic-bezier(0.2, 0, 0, 0.1);
 }
