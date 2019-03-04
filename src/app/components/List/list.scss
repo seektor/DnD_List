@@ -5,14 +5,21 @@
     }
 }
 
+.list__list-wrapper--translate-smooth {
+    & > * {
+        transition: transform 0.2s cubic-bezier(0.2, 0, 0, 0.1);
+    }
+}
+
 .list__item-placeholder {
     box-sizing: border-box;
     border: 2px dashed black;
     background-color: white;
     border-radius: 5px;
     margin-bottom: 10px;
+    z-index: -1;
 }
 
-.list__item--animation {
-    transition: all 0.2s cubic-bezier(0.2, 0, 0, 0.1);
+.list__item--translate-instant {
+    transition: none;
 }

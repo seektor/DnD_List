@@ -14,7 +14,7 @@ export class List {
     private initialCoordinates: TCoordinates = null;
     private filteredDomList: HTMLElement[] = [];
     private filteredListMap: number[] = [];
-    private initialPlaceholderIndex: number = 0;
+    private placeholderIndex: number = 0;
     private isDragging: boolean = false;
 
     private readonly listClassHooks: TListClassHooks = ListClassHooks;
@@ -25,6 +25,7 @@ export class List {
         this.onDrag = this.onDrag.bind(this);
         this.onDragEnter = this.onDragEnter.bind(this);
         this.onDragEnd = this.onDragEnd.bind(this);
+        this.onDraggedElementTransitionEnd = this.onDraggedElementTransitionEnd.bind(this);
         this.constructComponent(container);
     }
 
@@ -32,13 +33,12 @@ export class List {
         this.placeholderElement = this.createPlaceholderElement();
         const listWrapper: HTMLElement = document.createElement("div");
         this.listElement = listWrapper;
-        listWrapper.classList.add(this.listClassHooks.listWrapper);
+        listWrapper.classList.add(this.listClassHooks.listWrapper, this.listClassHooks.listWrapperTranslateSmooth);
         const itemTemplate: string = require("../templates/item/item.tpl.html");
         const itemFragment: DocumentFragment = document.createRange().createContextualFragment(itemTemplate);
         const items: HTMLElement[] = [];
-        for (let i = 0; i <= 5; i++) {
+        for (let i = 0; i <= 100; i++) {
             const clonedItem: HTMLElement = itemFragment.cloneNode(true).firstChild as HTMLElement;
-            clonedItem.classList.add(this.listClassHooks.itemAnimation);
             const titleElement: HTMLElement = clonedItem.querySelector(`[${this.itemAttributeHooks.itemTitle}]`);
             titleElement.innerHTML = `Item ${i}`;
             this.decorateDragData(clonedItem);
@@ -51,7 +51,7 @@ export class List {
     private createPlaceholderElement(): HTMLElement {
         const placeholderElement: HTMLElement = document.createElement("div");
         placeholderElement.addEventListener("mouseenter", this.onDragEnter);
-        placeholderElement.classList.add(this.listClassHooks.itemPlaceholder, this.listClassHooks.itemAnimation);
+        placeholderElement.classList.add(this.listClassHooks.itemPlaceholder);
         return placeholderElement;
     }
 
@@ -61,6 +61,10 @@ export class List {
     }
 
     private onDragStart(e: MouseEvent) {
+        if (this.isDragging) {
+            return;
+        }
+        this.listElement.classList.add(this.listClassHooks.listWrapperTranslateSmooth);
         this.draggedElement = e.currentTarget as HTMLElement;
         this.initialCoordinates = { x: e.clientX, y: e.clientY };
         this.draggedVerticalSpaceValue = this.getDraggedElementVerticalSpaceValue();
@@ -68,8 +72,8 @@ export class List {
         // Placeholder is taking over the dragged element's index therefore the dragged element is removed from the index calculations.
         this.filteredDomList = ([...this.draggedElement.parentElement.children] as HTMLElement[])
             .filter(child => child !== this.draggedElement);
-        this.filteredListMap = Array(this.filteredDomList.length).fill(1).map((v, i) => i);
-        this.initialPlaceholderIndex = this.filteredDomList.indexOf(this.placeholderElement);
+        this.filteredListMap = Array(this.filteredDomList.length).fill(1).map((_v, i) => i);
+        this.placeholderIndex = this.filteredDomList.indexOf(this.placeholderElement);
         this.detachDraggedElement();
         document.addEventListener("mousemove", this.onDrag);
         document.addEventListener("mouseup", this.onDragEnd);
@@ -91,16 +95,16 @@ export class List {
         }
         const swapData: TSwapData = this.buildSwapData(draggedOverElement);
         for (let i = swapData.fromAffectedItemIndex; i <= swapData.toAffectedItemIndex; i++) {
-            this.filteredListMap[i] += this.getPositionIncrementation(swapData.draggedItemLocation);
+            this.filteredListMap[i] += swapData.affectedItemsPositionIncrementation;
             const positionDiff: number = this.filteredListMap[i] - i;
             const itemElement: HTMLElement = this.filteredDomList[i];
             const yItemTranslationValue: number = positionDiff * this.draggedVerticalSpaceValue;
             yItemTranslationValue === 0 ?
                 this.removeTranslation(itemElement) : this.setTranslation(itemElement, 0, yItemTranslationValue);
         }
-        const yPlaceholderTranslationValue: number = (swapData.draggedOverPosition - this.initialPlaceholderIndex) * this.draggedVerticalSpaceValue;
+        const yPlaceholderTranslationValue: number = (swapData.newPlaceholderPosition - this.placeholderIndex) * this.draggedVerticalSpaceValue;
         this.setTranslation(this.placeholderElement, 0, yPlaceholderTranslationValue);
-        this.filteredListMap[this.initialPlaceholderIndex] = swapData.draggedOverPosition;
+        this.filteredListMap[this.placeholderIndex] = swapData.newPlaceholderPosition;
     }
 
     private getPositionIncrementation(draggedItemPosition: DraggedItemLocation): number {
@@ -116,7 +120,7 @@ export class List {
 
     private buildSwapData(draggedOverElement: HTMLElement): TSwapData {
         const draggedOverElementIndex: number = this.filteredDomList.indexOf(draggedOverElement);
-        const placeholderPosition: number = this.filteredListMap[this.initialPlaceholderIndex];
+        const placeholderPosition: number = this.filteredListMap[this.placeholderIndex];
         const draggedOverPosition: number = this.filteredListMap[draggedOverElementIndex];
         let draggedItemLocation: DraggedItemLocation;
         if (draggedOverPosition > placeholderPosition) {
@@ -145,17 +149,18 @@ export class List {
         const itemsLength: number = Math.abs(toItemAtPosition - fromItemAtPosition);
         const fromAffectedItemIndex: number = this.filteredListMap.indexOf(fromItemAtPosition);
         const toAffectedItemIndex: number = fromAffectedItemIndex + itemsLength;
+        const newPlaceholderPosition: number = draggedOverPosition;
+        const affectedItemsPositionIncrementation: number = this.getPositionIncrementation(draggedItemLocation);
         return {
-            draggedOverPosition,
             fromAffectedItemIndex,
-            draggedItemLocation: draggedItemLocation,
-            placeholderPosition,
-            toAffectedItemIndex
+            affectedItemsPositionIncrementation,
+            toAffectedItemIndex,
+            newPlaceholderPosition,
         }
     }
 
     private detachDraggedElement() {
-        this.draggedElement.classList.remove(this.listClassHooks.itemAnimation);
+        this.draggedElement.classList.add(this.listClassHooks.itemTranslateInstant);
         this.draggedElement.style.zIndex = `99999`;
         this.draggedElement.style.pointerEvents = "none";
         this.draggedElement.style.width = `${this.draggedElement.offsetWidth}px`;
@@ -164,12 +169,12 @@ export class List {
     }
 
     private attachDraggedElement() {
-        this.draggedElement.classList.add(this.listClassHooks.itemAnimation);
+        this.draggedElement.classList.remove(this.listClassHooks.itemTranslateInstant);
         this.draggedElement.style.zIndex = "";
         this.draggedElement.style.pointerEvents = "";
-        this.draggedElement.style.position = "";
         this.draggedElement.style.width = "";
         this.draggedElement.style.height = "";
+        this.draggedElement.style.position = "";
         this.removeTranslation(this.draggedElement);
     }
 
@@ -181,25 +186,36 @@ export class List {
     }
 
     private onDragEnd(e: MouseEvent) {
-        this.listElement.removeChild(this.placeholderElement);
-        const fromPosition: number = this.initialPlaceholderIndex;
-        const toPosition: number = this.filteredListMap[this.initialPlaceholderIndex];
+        document.removeEventListener("mousemove", this.onDrag);
+        document.removeEventListener("mouseup", this.onDragEnd);
+        this.draggedElement.classList.remove(this.listClassHooks.itemTranslateInstant);
+        this.draggedElement.addEventListener("transitionend", this.onDraggedElementTransitionEnd);
+        this.draggedElement.style.transform = this.placeholderElement.style.transform;
+    }
+
+    private onDraggedElementTransitionEnd(e: TransitionEvent) {
+        this.draggedElement.removeEventListener("transitionend", this.onDraggedElementTransitionEnd);
+        this.listElement.classList.remove(this.listClassHooks.listWrapperTranslateSmooth);
+        const fromPosition: number = this.placeholderIndex;
+        const toPosition: number = this.filteredListMap[this.placeholderIndex];
         const fromIndex: number = Math.min(fromPosition, toPosition);
         const toIndex: number = Math.max(fromPosition, toPosition);
-        console.log(`SWAP: FROM: ${fromPosition}, TO: ${toPosition}`);
+        this.listElement.removeChild(this.placeholderElement);
         for (let i = fromIndex; i <= toIndex; i++) {
             this.removeTranslation(this.filteredDomList[i]);
         }
-        // this.changeItemPosition(fromPosition, toPosition);
+        this.changeItemPosition(fromPosition, toPosition);
         this.attachDraggedElement();
+        this.onDropEnd();
+    }
+
+    private onDropEnd() {
         this.filteredDomList = [];
         this.filteredListMap = [];
-        this.initialPlaceholderIndex = 0;
+        this.placeholderIndex = 0;
         this.initialCoordinates = { x: 0, y: 0 };
         this.draggedElement = null;
         this.draggedVerticalSpaceValue = 0;
-        document.removeEventListener("mousemove", this.onDrag);
-        document.removeEventListener("mouseup", this.onDragEnd);
         this.isDragging = false;
     }
 
