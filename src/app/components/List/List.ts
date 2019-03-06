@@ -2,6 +2,7 @@ import { TCoordinates } from "../interfaces/TCoordinates";
 import ListClassHooks, { TListClassHooks } from "./structures/ListClassHooks";
 import ItemAttributeHooks, { TItemAttributeHooks } from "../templates/item/structures/ItemAttributeHooks";
 import { TSwapData } from "./structures/TSwapData";
+import { TListViewStatistics } from "./structures/TListViewStatistics";
 
 export class List {
 
@@ -12,6 +13,7 @@ export class List {
 
     private draggedVerticalSpaceValue: number = 0;
     private initialCoordinates: TCoordinates = null;
+    private initialScrollTop: number = 0;
     private filteredDomList: HTMLElement[] = [];
     private filteredListMap: number[] = [];
     private placeholderIndex: number = 0;
@@ -41,11 +43,11 @@ export class List {
         const itemTemplate: string = require("../templates/item/item.tpl.html");
         const itemFragment: DocumentFragment = document.createRange().createContextualFragment(itemTemplate);
         const items: HTMLElement[] = [];
-        for (let i = 0; i <= 3; i++) {
+        for (let i = 0; i <= 100; i++) {
             const clonedItem: HTMLElement = itemFragment.cloneNode(true).firstChild as HTMLElement;
             const titleElement: HTMLElement = clonedItem.querySelector(`[${this.itemAttributeHooks.itemTitle}]`);
             titleElement.innerHTML = `Item ${i}`;
-            this.decorateDragData(clonedItem);
+            this.decorateDragElement(clonedItem);
             items.push(clonedItem);
         }
         listElement.append(...items);
@@ -59,9 +61,9 @@ export class List {
         return placeholderElement;
     }
 
-    private decorateDragData(item: HTMLElement) {
-        item.addEventListener("mousedown", this.onDragStart);
-        item.addEventListener("mouseenter", this.onDragEnter);
+    private decorateDragElement(element: HTMLElement) {
+        element.addEventListener("mousedown", this.onDragStart);
+        element.addEventListener("mouseenter", this.onDragEnter);
     }
 
     private onDragStart(e: MouseEvent) {
@@ -71,7 +73,9 @@ export class List {
         this.listElement.classList.add(this.listClassHooks.listTranslateSmooth);
         this.draggedElement = e.currentTarget as HTMLElement;
         this.initialCoordinates = { x: e.clientX, y: e.clientY };
+        this.initialScrollTop = this.listComponentElement.scrollTop;
         this.draggedVerticalSpaceValue = this.getDraggedElementVerticalSpaceValue();
+        this.lockElementBeforeDetach();
         this.insertMatchingPlaceholder(this.draggedElement);
         // Placeholder is taking over the dragged element's index therefore the dragged element is removed from the index calculations.
         this.filteredDomList = ([...this.draggedElement.parentElement.children] as HTMLElement[])
@@ -82,6 +86,14 @@ export class List {
         document.addEventListener("mousemove", this.onDragMove);
         document.addEventListener("mouseup", this.onDragEnd);
         this.isDragging = true;
+    }
+
+    private lockElementBeforeDetach() {
+        const draggedElementClientRect: ClientRect = this.draggedElement.getBoundingClientRect();
+        this.draggedElement.style.top = `${draggedElementClientRect.top}px`;
+        this.draggedElement.style.left = `${draggedElementClientRect.left}px`;
+        this.draggedElement.style.width = `${this.draggedElement.offsetWidth}px`;
+        this.draggedElement.style.height = `${this.draggedElement.offsetHeight}px`;
     }
 
     private getDraggedElementVerticalSpaceValue(): number {
@@ -138,14 +150,9 @@ export class List {
     }
 
     private detachDraggedElement() {
-        const draggedElementClientRect: ClientRect = this.draggedElement.getBoundingClientRect();
         this.draggedElement.classList.add(this.listClassHooks.itemTranslateInstant);
         this.draggedElement.style.zIndex = `99999`;
         this.draggedElement.style.pointerEvents = "none";
-        this.draggedElement.style.top = `${draggedElementClientRect.top}px`;
-        this.draggedElement.style.left = `${draggedElementClientRect.left}px`;
-        this.draggedElement.style.width = `${this.draggedElement.offsetWidth}px`;
-        this.draggedElement.style.height = `${this.draggedElement.offsetHeight}px`;
         this.draggedElement.style.position = "fixed";
     }
 
@@ -171,9 +178,45 @@ export class List {
     private onDragEnd(e: MouseEvent) {
         document.removeEventListener("mousemove", this.onDragMove);
         document.removeEventListener("mouseup", this.onDragEnd);
-        this.draggedElement.classList.remove(this.listClassHooks.itemTranslateInstant);
+        const viewStatistics: TListViewStatistics = this.getViewStatistics();
+        this.adjustViewToPlaceholder(viewStatistics);
         this.draggedElement.addEventListener("transitionend", this.onDraggedElementTransitionEnd);
-        this.draggedElement.style.transform = this.placeholderElement.style.transform;
+        this.pullElementToPlaceholder(viewStatistics);
+    }
+
+    private pullElementToPlaceholder(viewStatistics: TListViewStatistics) {
+        this.draggedElement.classList.remove(this.listClassHooks.itemTranslateInstant);
+        let scrollTopDifference: number = 0;
+        if (this.initialScrollTop !== viewStatistics.adjustedScrollTop) {
+            scrollTopDifference = this.initialScrollTop - viewStatistics.adjustedScrollTop;
+        }
+        const placeholderYTranslation: number = (this.filteredListMap[this.placeholderIndex] - this.placeholderIndex) * this.draggedVerticalSpaceValue;
+        const yTranslationWithScroll: number = placeholderYTranslation + scrollTopDifference;
+        this.setTranslation(this.draggedElement, 0, yTranslationWithScroll);
+    }
+
+    private getViewStatistics(): TListViewStatistics {
+        const listWrapperClientRect: ClientRect = this.listComponentElement.getBoundingClientRect();
+        const placeholderClientRect: ClientRect = this.placeholderElement.getBoundingClientRect();
+        const isAboveView: boolean = placeholderClientRect.top < listWrapperClientRect.top;
+        const isBelowView: boolean = placeholderClientRect.top + placeholderClientRect.height > listWrapperClientRect.top + listWrapperClientRect.height;
+        const isChildInView: boolean = !isAboveView && !isBelowView;
+        let newScrollTop: number = this.listComponentElement.scrollTop;
+        if (isAboveView) {
+            newScrollTop = this.filteredListMap[this.placeholderIndex] * this.draggedVerticalSpaceValue;
+        } else if (isBelowView) {
+            newScrollTop = ((this.filteredListMap[this.placeholderIndex] + 1) * this.draggedVerticalSpaceValue) - this.listComponentElement.clientHeight;
+        }
+        return {
+            adjustedScrollTop: newScrollTop,
+            isChildInView,
+        }
+    }
+
+    private adjustViewToPlaceholder(viewStatistics: TListViewStatistics) {
+        if (!viewStatistics.isChildInView) {
+            this.listComponentElement.scrollTo({ behavior: "smooth", top: viewStatistics.adjustedScrollTop });
+        }
     }
 
     private onDraggedElementTransitionEnd(e: TransitionEvent) {
@@ -199,6 +242,7 @@ export class List {
         this.initialCoordinates = { x: 0, y: 0 };
         this.draggedElement = null;
         this.draggedVerticalSpaceValue = 0;
+        this.initialScrollTop = 0;
         this.isDragging = false;
     }
 
