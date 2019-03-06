@@ -1,13 +1,15 @@
 export interface TListClassHooks {
     listWrapper: string;
-    listWrapperTranslateSmooth: string;
+    list: string;
+    listTranslateSmooth: string;
     itemTranslateInstant: string;
     itemPlaceholder: string;
 }
 
 export default {
     listWrapper: "list__list-wrapper",
-    listWrapperTranslateSmooth: "list__list-wrapper--translate-smooth",
+    list: "list__list",
+    listTranslateSmooth: "list__list--translate-smooth",
     itemTranslateInstant: "list__item--translate-instant",
     itemPlaceholder: "list__item-placeholder",
 } as TListClassHooks;

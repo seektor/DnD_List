@@ -2,10 +2,10 @@ import { TCoordinates } from "../interfaces/TCoordinates";
 import ListClassHooks, { TListClassHooks } from "./structures/ListClassHooks";
 import ItemAttributeHooks, { TItemAttributeHooks } from "../templates/item/structures/ItemAttributeHooks";
 import { TSwapData } from "./structures/TSwapData";
-import { DraggedItemLocation } from "./structures/DraggedItemLocation";
 
 export class List {
 
+    private listComponentElement: HTMLElement = null;
     private listElement: HTMLElement = null;
     private draggedElement: HTMLElement = null;
     private placeholderElement: HTMLElement = null;
@@ -31,21 +31,25 @@ export class List {
 
     private constructComponent(container: HTMLElement) {
         this.placeholderElement = this.createPlaceholderElement();
-        const listWrapper: HTMLElement = document.createElement("div");
-        this.listElement = listWrapper;
-        listWrapper.classList.add(this.listClassHooks.listWrapper, this.listClassHooks.listWrapperTranslateSmooth);
+        const listWrapperElement: HTMLElement = document.createElement("div");
+        listWrapperElement.classList.add(this.listClassHooks.listWrapper);
+        const listElement: HTMLElement = document.createElement("div");
+        listElement.classList.add(this.listClassHooks.list, this.listClassHooks.listTranslateSmooth);
+        listWrapperElement.append(listElement);
+        this.listComponentElement = listWrapperElement;
+        this.listElement = listElement;
         const itemTemplate: string = require("../templates/item/item.tpl.html");
         const itemFragment: DocumentFragment = document.createRange().createContextualFragment(itemTemplate);
         const items: HTMLElement[] = [];
-        for (let i = 0; i <= 2; i++) {
+        for (let i = 0; i <= 3; i++) {
             const clonedItem: HTMLElement = itemFragment.cloneNode(true).firstChild as HTMLElement;
             const titleElement: HTMLElement = clonedItem.querySelector(`[${this.itemAttributeHooks.itemTitle}]`);
             titleElement.innerHTML = `Item ${i}`;
             this.decorateDragData(clonedItem);
             items.push(clonedItem);
         }
-        listWrapper.append(...items);
-        container.appendChild(listWrapper);
+        listElement.append(...items);
+        container.appendChild(listWrapperElement);
     }
 
     private createPlaceholderElement(): HTMLElement {
@@ -64,7 +68,7 @@ export class List {
         if (this.isDragging) {
             return;
         }
-        this.listElement.classList.add(this.listClassHooks.listWrapperTranslateSmooth);
+        this.listElement.classList.add(this.listClassHooks.listTranslateSmooth);
         this.draggedElement = e.currentTarget as HTMLElement;
         this.initialCoordinates = { x: e.clientX, y: e.clientY };
         this.draggedVerticalSpaceValue = this.getDraggedElementVerticalSpaceValue();
@@ -94,59 +98,55 @@ export class List {
             return;
         }
         const swapData: TSwapData = this.buildSwapData(draggedOverElement);
-        for (let i = swapData.fromAffectedItemIndex; i <= swapData.toAffectedItemIndex; i++) {
+        swapData.affectedItemIndexes.forEach(i => {
             this.filteredListMap[i] += swapData.affectedItemsPositionIncrementation;
             const positionDiff: number = this.filteredListMap[i] - i;
             const itemElement: HTMLElement = this.filteredDomList[i];
             const yItemTranslationValue: number = positionDiff * this.draggedVerticalSpaceValue;
             yItemTranslationValue === 0 ?
                 this.removeTranslation(itemElement) : this.setTranslation(itemElement, 0, yItemTranslationValue);
-        }
+        });
         const yPlaceholderTranslationValue: number = (swapData.newPlaceholderPosition - this.placeholderIndex) * this.draggedVerticalSpaceValue;
         this.setTranslation(this.placeholderElement, 0, yPlaceholderTranslationValue);
         this.filteredListMap[this.placeholderIndex] = swapData.newPlaceholderPosition;
-        console.log(swapData.fromAffectedItemIndex, swapData.toAffectedItemIndex, this.filteredListMap);
     }
 
+    // TODO: This algorithm (indexOf) or the whole listMap structure can be improved to avoid indexOf.
     private buildSwapData(draggedOverElement: HTMLElement): TSwapData {
         const draggedOverElementIndex: number = this.filteredDomList.indexOf(draggedOverElement);
-        const placeholderPosition: number = this.filteredListMap[this.placeholderIndex];
-        const draggedOverPosition: number = this.filteredListMap[draggedOverElementIndex];
-        let fromItemAtPosition: number;
-        let toItemAtPosition: number;
+        const fromPosition: number = this.filteredListMap[this.placeholderIndex];
+        const toPosition: number = this.filteredListMap[draggedOverElementIndex];
         let affectedItemsPositionIncrementation: number
-        if (draggedOverPosition > placeholderPosition) {
-            fromItemAtPosition = placeholderPosition + 1;
-            toItemAtPosition = draggedOverPosition;
+        if (toPosition > fromPosition) {
             affectedItemsPositionIncrementation = -1;
-        } else if (draggedOverPosition === placeholderPosition) {
-            fromItemAtPosition = placeholderPosition;
-            toItemAtPosition = placeholderPosition;
+        } else if (toPosition === fromPosition) {
             affectedItemsPositionIncrementation = 0;
         } else {
-            fromItemAtPosition = draggedOverPosition;
-            toItemAtPosition = placeholderPosition - 1;
             affectedItemsPositionIncrementation = 1;
         }
-        const itemsLength: number = Math.abs(toItemAtPosition - fromItemAtPosition);
-        const fromAffectedItemIndex: number = this.filteredListMap.indexOf(fromItemAtPosition);
-        const toAffectedItemIndex: number = fromAffectedItemIndex + itemsLength;
-        const newPlaceholderPosition: number = draggedOverPosition;
+        const positionDifference: number = Math.abs(toPosition - fromPosition);
+        const firstPosition: number = Math.min(fromPosition, toPosition);
+        const minPosition: number = toPosition >= fromPosition ? firstPosition + 1 : firstPosition;
+        const affectedItemIndexes: number[] = new Array(positionDifference).fill(0)
+            .map((_ai, i) => this.filteredListMap.indexOf(i + minPosition));
+        const newPlaceholderPosition: number = toPosition;
         return {
-            fromAffectedItemIndex,
+            affectedItemIndexes,
             affectedItemsPositionIncrementation,
-            toAffectedItemIndex,
             newPlaceholderPosition,
         }
     }
 
     private detachDraggedElement() {
+        const draggedElementClientRect: ClientRect = this.draggedElement.getBoundingClientRect();
         this.draggedElement.classList.add(this.listClassHooks.itemTranslateInstant);
         this.draggedElement.style.zIndex = `99999`;
         this.draggedElement.style.pointerEvents = "none";
+        this.draggedElement.style.top = `${draggedElementClientRect.top}px`;
+        this.draggedElement.style.left = `${draggedElementClientRect.left}px`;
         this.draggedElement.style.width = `${this.draggedElement.offsetWidth}px`;
         this.draggedElement.style.height = `${this.draggedElement.offsetHeight}px`;
-        this.draggedElement.style.position = "absolute";
+        this.draggedElement.style.position = "fixed";
     }
 
     private attachDraggedElement() {
@@ -156,6 +156,8 @@ export class List {
         this.draggedElement.style.width = "";
         this.draggedElement.style.height = "";
         this.draggedElement.style.position = "";
+        this.draggedElement.style.top = "";
+        this.draggedElement.style.left = "";
         this.removeTranslation(this.draggedElement);
     }
 
@@ -176,7 +178,7 @@ export class List {
 
     private onDraggedElementTransitionEnd(e: TransitionEvent) {
         this.draggedElement.removeEventListener("transitionend", this.onDraggedElementTransitionEnd);
-        this.listElement.classList.remove(this.listClassHooks.listWrapperTranslateSmooth);
+        this.listElement.classList.remove(this.listClassHooks.listTranslateSmooth);
         const fromPosition: number = this.placeholderIndex;
         const toPosition: number = this.filteredListMap[this.placeholderIndex];
         const fromIndex: number = Math.min(fromPosition, toPosition);
@@ -201,8 +203,9 @@ export class List {
     }
 
     private changeItemPosition(fromIndex: number, toIndex: number) {
+        const beforeIndex: number = fromIndex < toIndex ? toIndex + 1 : toIndex;
         const child: Node = this.listElement.children.item(fromIndex);
-        const toNode: Node = this.listElement.children.item(toIndex + 1);
+        const toNode: Node = this.listElement.children.item(beforeIndex);
         this.listElement.insertBefore(child, toNode);
     }
 

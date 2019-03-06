@@ -1,6 +1,5 @@
 export interface TSwapData {
-    fromAffectedItemIndex: number;
-    toAffectedItemIndex: number;
+    affectedItemIndexes: number[];
     affectedItemsPositionIncrementation: number;
     newPlaceholderPosition: number;
 }
