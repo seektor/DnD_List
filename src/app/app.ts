@@ -5,8 +5,9 @@ import { List } from "./components/List/List";
 class App {
 
     constructor() {
-        new Toolbox(document.getElementById("toolbox"));
-        new List(document.getElementById("list"));
+        const toolbox = new Toolbox(document.getElementById("toolbox"));
+        const list = new List(document.getElementById("list"));
+        toolbox.setTargetListHandlers(list.getListHandlers());
     }
 }
 

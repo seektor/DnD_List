@@ -2,6 +2,7 @@
     height: 100%;
     overflow: auto;
     padding: 0px 80px;
+    transition: background-color 0.2s cubic-bezier(0.2, 0, 0, 0.1);
 }
 
 .list__list {
@@ -9,6 +10,10 @@
     & > * {
         margin-bottom: 10px;
     }
+}
+
+.list__list--highlighted {
+    background-color: lightskyblue;
 }
 
 .list__list--translate-smooth {
@@ -25,6 +30,7 @@
     margin-bottom: 10px;
     z-index: -9999;
     opacity: 0.5;
+    transition: height 0.2s cubic-bezier(0.2, 0, 0, 0.1);
 }
 
 .list__item--translate-instant {

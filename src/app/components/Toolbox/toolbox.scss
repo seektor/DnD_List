@@ -1,3 +1,10 @@
 .toolbox__toolbox-wrapper {
     height: 100%;
+    position: relative;
+}
+
+.toolbox__item {
+    background-color: tomato !important;
+    height: 80px !important;
+    line-height: 80px;
 }
