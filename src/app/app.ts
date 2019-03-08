@@ -6,8 +6,11 @@ class App {
 
     constructor() {
         const toolbox = new Toolbox(document.getElementById("toolbox"));
-        const list = new List(document.getElementById("list"));
-        toolbox.setTargetListHandlers(list.getListHandlers());
+        const leftList = new List(document.getElementById("left-list"));
+        const rightList = new List(document.getElementById("right-list"));
+
+        toolbox.addTargetListHandlers(leftList.getListHandlers());
+        toolbox.addTargetListHandlers(rightList.getListHandlers());
     }
 }
 

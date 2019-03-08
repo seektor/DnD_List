@@ -102,6 +102,7 @@ export class List {
     }
 
     private onDragStart(e: MouseEvent) {
+        console.log("dragStart");
         document.removeEventListener("mousemove", this.onDragStart);
         this.isDragging = true;
         this.listElement.classList.add(this.listClassHooks.listTranslateSmooth);
@@ -131,6 +132,8 @@ export class List {
     }
 
     private onDragEnter(e: MouseEvent) {
+        console.log("dragEnter");
+
         if (!this.isDragging) {
             return;
         }
@@ -204,7 +207,6 @@ export class List {
 
     private onDragMove(e: MouseEvent) {
         e.preventDefault();
-        this.isDragging = true;
         const xTranslation: number = e.clientX - this.initialCoordinates.x;
         const yTranslation: number = e.clientY - this.initialCoordinates.y;
         this.setTranslation(this.draggedElement, xTranslation, yTranslation);

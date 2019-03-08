@@ -10,7 +10,7 @@ export class Toolbox {
     private toolboxComponentElement: HTMLElement = null;
     private draggedElement: HTMLElement = null;
     private initialCoordinates: TCoordinates = null;
-    private targetListHandlers: IListHandlers;
+    private targetListHandlers: IListHandlers[] = [];
 
     constructor(container: HTMLElement) {
         this.onDragStart = this.onDragStart.bind(this);
@@ -34,8 +34,8 @@ export class Toolbox {
         container.appendChild(toolboxWrapper);
     }
 
-    public setTargetListHandlers(listHandlers: IListHandlers) {
-        this.targetListHandlers = listHandlers;
+    public addTargetListHandlers(listHandlers: IListHandlers) {
+        this.targetListHandlers.push(listHandlers);
     }
 
     private onDragStart(e: MouseEvent) {
@@ -46,9 +46,11 @@ export class Toolbox {
         this.initialCoordinates = { x: e.clientX, y: e.clientY };
         document.addEventListener("mousemove", this.onDragMove);
         document.addEventListener("mouseup", this.onDragEnd);
-        this.targetListHandlers.setExternalDraggedElement(this.draggedElement, "SUCCESS");
-        this.targetListHandlers.toggleDropzone(true);
-        this.targetListHandlers.toggleExternalElementAccessListener(true);
+        this.targetListHandlers.forEach(targetListHandler => {
+            targetListHandler.setExternalDraggedElement(this.draggedElement, "SUCCESS");
+            targetListHandler.toggleDropzone(true);
+            targetListHandler.toggleExternalElementAccessListener(true);
+        });
     }
 
     private detachElement(mirrorElement: HTMLElement) {
@@ -73,9 +75,11 @@ export class Toolbox {
         document.removeEventListener("mouseup", this.onDragEnd);
         this.draggedElement.remove();
         this.draggedElement = null;
-        this.targetListHandlers.toggleDropzone(false);
-        this.targetListHandlers.toggleExternalElementAccessListener(false);
-        this.targetListHandlers.externalDragStop();
+        this.targetListHandlers.forEach(targetListHandler => {
+            targetListHandler.toggleDropzone(false);
+            targetListHandler.toggleExternalElementAccessListener(false);
+            targetListHandler.externalDragStop();
+        });
     }
 
     private setTranslation(element: HTMLElement, x: number, y: number) {

@@ -3,19 +3,41 @@ html, body {
     font-family: 'Open Sans', sans-serif;
 }
 
-#wrapper {
+#app-wrapper {
     height: 100%;
     box-sizing: border-box;
     background-color: #e0edf1;
-    padding: 3% 5%;
+    padding: 2% 4%;
     display: flex;
     flex-direction: row;
     align-content: space-between;
 }
 
+#left-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 47%;
+}
+
+#right-wrapper {
+    width: 47%;
+    color: white;
+    text-align: center;
+}
+
+#right-list-wrapper {
+
+    height: 3000px;
+    overflow: auto;
+    
+    & > div {
+        margin-top: 1250px;
+        height: 500px;
+    }
+}
+
 #toolbox {
-    height: 100%;
-    width: 30%;
+    margin-bottom: 10px;
 }
 
 #space {
@@ -23,12 +45,9 @@ html, body {
     flex-grow: 1;
 }
 
-#list {
-    height: 100%;
-    width: 60%;
-}
-
 .container {
+    height: 100%;
+    width: 100%;
     background-color: #6B83C0;
     padding: 20px 50px;
     border-radius: 10px;
@@ -37,7 +56,23 @@ html, body {
     overflow: auto;
 }
 
-.container__list {
+.container__list--left {
     padding-left: 0px;
     padding-right: 0px;
+
+    & > div {
+        padding-left: 40px;
+        padding-right: 40px;
+    }
+
+}
+
+.container__list--right {
+    padding-left: 0px;
+    padding-right: 0px;
+    
+    & > div {
+        padding-left: 40px;
+        padding-right: 40px;
+    }
 }

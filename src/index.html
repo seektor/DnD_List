@@ -10,10 +10,18 @@
 </head>
 
 <body>
-    <div id="wrapper">
-        <div id="toolbox" class="container"></div>
+    <div id="app-wrapper">
+        <div id="left-wrapper">
+            <div id="toolbox" class="container container__toolbox"></div>
+            <div id="left-list" class="container container__list--left"></div>
+        </div>
         <div id="space"></div>
-        <div id="list" class="container container__list"></div>
+        <div id="right-wrapper" class="container container__list--right">
+            <h2>The list is below in order to test scrollable parent scenario.</h2>
+            <div id="right-list-wrapper">
+                <div id="right-list"></div>
+            </div>
+        </div>
     </div>
 
 </body>
