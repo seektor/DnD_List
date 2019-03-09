@@ -1,4 +1,5 @@
 export interface TListViewStatistics {
-    isChildInView: boolean;
+    isPlaceholderInFixedView: boolean;
     adjustedScrollTop: number;
+    hasComponentBeenScrolled: boolean;
 }

@@ -101,6 +101,7 @@ export class List {
         this.dragStartData = {
             initialCoordinates: { x: e.clientX, y: e.clientY },
             initialComponentScrollTop: this.listComponentElement.scrollTop,
+            initialComponentTop: this.listComponentElement.getBoundingClientRect().top,
         }
         this.dragMode = DragMode.Internal;
         document.addEventListener("mousemove", this.onDragStart);
@@ -218,10 +219,13 @@ export class List {
 
     private pullElementToPlaceholder(viewStatistics: TListViewStatistics): void {
         this.draggedElement.classList.remove(this.listClassHooks.itemTranslateInstant);
-        let scrollTopDifference: number = 0;
-        if (this.dragStartData.initialComponentScrollTop !== viewStatistics.adjustedScrollTop) {
-            scrollTopDifference = this.dragStartData.initialComponentScrollTop - viewStatistics.adjustedScrollTop;
+        if (viewStatistics.hasComponentBeenScrolled) {
+            // The calculations of multi levels transitions would be too complicated.
+            this.removeTranslation(this.draggedElement);
+            this.draggedElement.dispatchEvent(new TransitionEvent("transitionend"));
+            return;
         }
+        let scrollTopDifference: number = this.dragStartData.initialComponentScrollTop - viewStatistics.adjustedScrollTop;
         const positionsDifference: number = this.filteredListMap[this.placeholderIndex] - this.placeholderIndex;
         const placeholderYTranslation: number = positionsDifference * this.placeholderVerticalSpaceValue;
         const yTranslationWithScroll: number = placeholderYTranslation + scrollTopDifference;
@@ -236,25 +240,27 @@ export class List {
     }
 
     private getViewStatistics(): TListViewStatistics {
-        const listWrapperClientRect: ClientRect = this.listComponentElement.getBoundingClientRect();
+        const listComponentClientRect: ClientRect = this.listComponentElement.getBoundingClientRect();
         const placeholderClientRect: ClientRect = this.placeholderElement.getBoundingClientRect();
-        const isAboveView: boolean = placeholderClientRect.top < listWrapperClientRect.top;
-        const isBelowView: boolean = placeholderClientRect.top + placeholderClientRect.height > listWrapperClientRect.top + listWrapperClientRect.height;
-        const isPlaceholderInView: boolean = !isAboveView && !isBelowView;
+        const isAboveView: boolean = placeholderClientRect.top < listComponentClientRect.top;
+        const isBelowView: boolean = placeholderClientRect.top + placeholderClientRect.height > listComponentClientRect.top + listComponentClientRect.height;
+        const isPlaceholderInFixedView: boolean = !isAboveView && !isBelowView;
         let newScrollTop: number = this.listComponentElement.scrollTop;
         if (isAboveView) {
             newScrollTop = this.filteredListMap[this.placeholderIndex] * this.placeholderVerticalSpaceValue;
         } else if (isBelowView) {
             newScrollTop = ((this.filteredListMap[this.placeholderIndex] + 1) * this.placeholderVerticalSpaceValue) - this.listComponentElement.clientHeight;
         }
+        const hasComponentBeenScrolled: boolean = this.dragStartData.initialComponentTop !== listComponentClientRect.top;
         return {
             adjustedScrollTop: newScrollTop,
-            isChildInView: isPlaceholderInView,
+            isPlaceholderInFixedView: isPlaceholderInFixedView,
+            hasComponentBeenScrolled
         }
     }
 
     private adjustViewToPlaceholder(viewStatistics: TListViewStatistics): void {
-        if (!viewStatistics.isChildInView) {
+        if (!viewStatistics.isPlaceholderInFixedView && !viewStatistics.hasComponentBeenScrolled) {
             const distance: number = viewStatistics.adjustedScrollTop - this.listComponentElement.scrollTop;
             smoothScroll(this.listComponentElement, this.TRANSLATE_TIME, distance);
         }
