@@ -1,5 +1,5 @@
 export interface TListClassHooks {
-    listWrapper: string;
+    listComponent: string;
     list: string;
     listHighlighted: string;
     listTranslateSmooth: string;
@@ -8,7 +8,7 @@ export interface TListClassHooks {
 }
 
 export default {
-    listWrapper: "list__list-wrapper",
+    listComponent: "list__list-component",
     list: "list__list",
     listHighlighted: "list__list--highlighted",
     listTranslateSmooth: "list__list--translate-smooth",

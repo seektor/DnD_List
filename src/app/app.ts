@@ -12,11 +12,6 @@ class App {
 
         toolbox.addTargetListHandlers(leftList.getListHandlers());
         toolbox.addTargetListHandlers(rightList.getListHandlers());
-
-        const rightWrapper: HTMLElement = document.getElementById("right-wrapper");
-        setTimeout(() => {
-            smoothScroll(rightWrapper, 1000, 2000);
-        }, 3000);
     }
 }
 
