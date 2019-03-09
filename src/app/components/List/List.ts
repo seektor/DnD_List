@@ -211,6 +211,7 @@ export class List {
     private onDragEnd(e: MouseEvent): void {
         document.removeEventListener("mouseup", this.onDragEnd);
         document.removeEventListener("mousemove", this.onDragMove);
+        this.isDragging = false;
         const viewStatistics: TListViewStatistics = this.getViewStatistics();
         this.adjustViewToPlaceholder(viewStatistics);
         this.draggedElement.addEventListener("transitionend", this.onDraggedElementTransitionEnd);
@@ -287,7 +288,6 @@ export class List {
         this.attachDraggedElement();
         // Finalize operation
         this.clearProcessDefinitions();
-        this.isDragging = false;
     }
 
     private cancelExternalDrag(): void {
@@ -316,6 +316,7 @@ export class List {
         this.draggedElement = null;
         this.isDraggingFromExternalSource = false;
         this.externalDraggedElement = null;
+        console.log(this.placeholderElement);
     }
 
     private onActionClick(e: MouseEvent): void {

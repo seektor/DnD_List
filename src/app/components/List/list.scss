@@ -1,7 +1,8 @@
 .list__list-component {
     height: 100%;
     overflow: auto;
-    transition: background-color 0.2s cubic-bezier(0.2, 0, 0, 0.1);
+    transition: background-color 0.2s ease;
+    overflow-anchor: none;
 }
 
 .list__list {
@@ -27,7 +28,6 @@
     background-color: white;
     border-radius: 5px;
     margin-bottom: 10px;
-    z-index: -9999;
     opacity: 0.5;
     transition: transform 0.2s ease, height 0.2s ease;
 }

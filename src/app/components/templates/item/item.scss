@@ -6,6 +6,8 @@
     text-align: center;
     background-color: #2F56A8;
     cursor: pointer;
+    user-select: none;
+    -moz-user-select: none;
 }
 
 .item__title {
