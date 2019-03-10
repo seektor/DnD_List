@@ -24,7 +24,8 @@ export function smoothScroll(container: HTMLElement, duration: number, distance:
             requestAnimationFrame(scroll);
         } else {
             if (onEndCallback) {
-                onEndCallback();
+                // One more repaint in order to refresh the last scrolling step.
+                requestAnimationFrame(() => onEndCallback());
             }
         }
     }

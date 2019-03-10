@@ -20,7 +20,6 @@ export class Toolbox {
     }
 
     private constructComponent(container: HTMLElement) {
-        // TODO: There should be separate components - toolbox-wrapper and toolbox;
         const toolboxWrapper: HTMLElement = document.createElement("div");
         toolboxWrapper.classList.add(this.toolboxClassHooks.toolboxWrapper);
         this.toolboxComponentElement = toolboxWrapper;
@@ -47,9 +46,8 @@ export class Toolbox {
         document.addEventListener("mousemove", this.onDragMove);
         document.addEventListener("mouseup", this.onDragEnd);
         this.targetListHandlers.forEach(targetListHandler => {
-            targetListHandler.setExternalDraggedElement(this.draggedElement, "SUCCESS");
+            targetListHandler.onExternalDragStart(this.draggedElement, this.draggedElement.cloneNode(true) as HTMLElement);
             targetListHandler.toggleDropzone(true);
-            targetListHandler.toggleExternalElementAccessListener(true);
         });
     }
 
@@ -59,6 +57,7 @@ export class Toolbox {
         this.draggedElement.style.left = `${draggedElementClientRect.left}px`;
         this.draggedElement.style.width = `${mirrorElement.offsetWidth}px`;
         this.draggedElement.style.height = `${mirrorElement.offsetHeight}px`;
+        this.draggedElement.style.zIndex = `${99999}`;
         this.draggedElement.style.pointerEvents = "none";
         this.draggedElement.style.position = "fixed";
     }
@@ -77,8 +76,6 @@ export class Toolbox {
         this.draggedElement = null;
         this.targetListHandlers.forEach(targetListHandler => {
             targetListHandler.toggleDropzone(false);
-            targetListHandler.toggleExternalElementAccessListener(false);
-            targetListHandler.externalDragStop();
         });
     }
 

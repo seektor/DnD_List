@@ -17,9 +17,8 @@ export class List {
     private itemElementCloneBase: HTMLElement = null;
     private draggedElement: HTMLElement = null;
     private placeholderElement: HTMLElement = null;
-
-    private pureDraggedElement: HTMLElement = null;
     private externalDraggedElement: HTMLElement = null;
+    private externalDraggedContentElement: HTMLElement = null;
 
     private placeholderVerticalSpaceValue: number = 0;
     private dragStartData: TDragStartData = null;
@@ -28,7 +27,7 @@ export class List {
     private filteredListMap: number[] = [];
     private placeholderIndex: number = 0;
     private isDragging: boolean = false;
-    private isDraggingFromExternalSource: boolean = false;
+    private isProcessingDrag: boolean = false;
 
     private readonly listClassHooks: TListClassHooks = ListClassHooks;
     private readonly itemAttributeHooks: TItemAttributeHooks = ItemAttributeHooks;
@@ -73,7 +72,7 @@ export class List {
     private createItemElement(contentElement: HTMLElement): HTMLElement {
         const clonedItemElement: HTMLElement = this.itemElementCloneBase.cloneNode(true) as HTMLElement;
         contentElement.style.height = `${Math.floor(Math.random() * 40 + 60)}px`;
-        clonedItemElement.addEventListener("mousedown", this.onActionDown);
+        clonedItemElement.addEventListener("mousedown", (e) => this.onActionDown(e, DragMode.Internal));
         clonedItemElement.addEventListener("mouseenter", this.onDragEnter);
         clonedItemElement.appendChild(contentElement);
         return clonedItemElement;
@@ -86,13 +85,14 @@ export class List {
         this.onDragEnter = this.onDragEnter.bind(this);
         this.onDragEnd = this.onDragEnd.bind(this);
         this.toggleDropzone = this.toggleDropzone.bind(this);
+        this.onExternalDragStart = this.onExternalDragStart.bind(this);
         this.onExternalElementEnter = this.onExternalElementEnter.bind(this);
         this.onExternalElementLeave = this.onExternalElementLeave.bind(this);
-        this.setExternalDraggedElement = this.setExternalDraggedElement.bind(this);
+        this.onSuccesfullExternalDragEnd = this.onSuccesfullExternalDragEnd.bind(this);
         this.toggleExternalElementAccessListener = this.toggleExternalElementAccessListener.bind(this);
         this.onDraggedElementPulled = this.onDraggedElementPulled.bind(this);
         this.onActionClick = this.onActionClick.bind(this);
-        this.externalDragStop = this.externalDragStop.bind(this);
+        this.onOutOfListDragEnd = this.onOutOfListDragEnd.bind(this);
     }
 
     private createPlaceholderElement(): HTMLElement {
@@ -102,25 +102,30 @@ export class List {
         return placeholderElement;
     }
 
-    private onActionDown(e: MouseEvent): void {
-        if (this.isDragging) {
+    private onActionDown(e: MouseEvent, dragMode: DragMode): void {
+        if (this.isProcessingDrag) {
             return;
         }
+        this.dragMode = dragMode;
         this.draggedElement = e.currentTarget as HTMLElement;
         this.dragStartData = {
             initialCoordinates: { x: e.clientX, y: e.clientY },
             initialComponentScrollTop: this.listComponentElement.scrollTop,
             initialComponentTop: this.listComponentElement.getBoundingClientRect().top,
         }
-        this.dragMode = DragMode.Internal;
         document.addEventListener("mousemove", this.onDragStart);
-        document.addEventListener("click", this.onActionClick);
+        if (this.dragMode === DragMode.Internal) {
+            document.addEventListener("click", this.onActionClick);
+        }
     }
 
     private onDragStart(e: MouseEvent): void {
         document.removeEventListener("mousemove", this.onDragStart);
-        document.removeEventListener("click", this.onActionClick);
+        if (this.dragMode === DragMode.Internal) {
+            document.removeEventListener("click", this.onActionClick);
+        }
         this.isDragging = true;
+        this.isProcessingDrag = true;
         this.listElement.classList.add(this.listClassHooks.listTranslateSmooth);
         this.placeholderVerticalSpaceValue = this.getElementVerticalSpaceValue(this.draggedElement); this.insertMatchingPlaceholder(this.draggedElement);
         this.detachDraggedElement();
@@ -139,6 +144,7 @@ export class List {
     }
 
     private onDragEnter(e: MouseEvent): void {
+        e.stopPropagation();
         if (!this.isDragging) {
             return;
         }
@@ -210,25 +216,28 @@ export class List {
         this.draggedElement.style.width = `${this.draggedElement.offsetWidth}px`;
         this.draggedElement.style.height = `${this.draggedElement.offsetHeight}px`;
         this.draggedElement.classList.add(this.listClassHooks.itemTranslateInstant);
-        this.draggedElement.style.zIndex = "99999";
+        this.draggedElement.style.zIndex = "1";
         this.draggedElement.style.pointerEvents = "none";
         this.draggedElement.style.position = "fixed";
     }
 
     private attachDraggedElement(): void {
-        this.removeTranslation(this.draggedElement);
-        this.draggedElement.style.zIndex = "";
-        this.draggedElement.style.pointerEvents = "";
-        this.draggedElement.style.width = "";
-        this.draggedElement.style.height = "";
-        this.draggedElement.style.position = "";
-        this.draggedElement.style.top = "";
-        this.draggedElement.style.left = "";
+        this.clearRedundantStyles(this.draggedElement);
         this.draggedElement.classList.remove(this.listClassHooks.itemTranslateInstant);
     }
 
+    private clearRedundantStyles(element: HTMLElement): void {
+        this.removeTranslation(element);
+        element.style.zIndex = "";
+        element.style.pointerEvents = "";
+        element.style.width = "";
+        element.style.height = "";
+        element.style.position = "";
+        element.style.top = "";
+        element.style.left = "";
+    }
+
     private onDragMove(e: MouseEvent): void {
-        e.preventDefault();
         const xTranslation: number = e.clientX - this.dragStartData.initialCoordinates.x;
         const yTranslation: number = e.clientY - this.dragStartData.initialCoordinates.y;
         this.setTranslation(this.draggedElement, xTranslation, yTranslation);
@@ -242,6 +251,12 @@ export class List {
         const viewAdjustedPromise: Promise<void> = this.adjustViewToPlaceholder(viewStatistics);
         const elementPulledPromise: Promise<void> = this.pullElementToPlaceholder(viewStatistics);
         await Promise.all([viewAdjustedPromise, elementPulledPromise]).then(() => this.onDraggedElementPulled());
+        if (this.dragMode === DragMode.Internal) {
+            this.onPositionChangeNotifier(this.placeholderIndex, this.filteredListMap[this.placeholderIndex]);
+            this.clearProcessDefinitions();
+        } else {
+            this.onSuccesfullExternalDragEnd(e);
+        }
     }
 
     private pullElementToPlaceholder(viewStatistics: TListViewStatistics): Promise<void> {
@@ -250,8 +265,8 @@ export class List {
         const elementPulledPromise: Promise<void> = new Promise((res, rej) => {
             transitionEndResolveCallback = res;
         });
-        this.draggedElement.addEventListener("transitionend", () => transitionEndResolveCallback());
-        elementPulledPromise.then(() => this.draggedElement.removeEventListener("transitionend", this.onDraggedElementPulled));
+        this.draggedElement.addEventListener("transitionend", transitionEndResolveCallback);
+        elementPulledPromise.then(() => this.draggedElement.removeEventListener("transitionend", transitionEndResolveCallback));
         if (viewStatistics.hasComponentBeenScrolled) {
             // The calculations of multi levels transitions would be too complicated.
             this.removeTranslation(this.draggedElement);
@@ -279,10 +294,13 @@ export class List {
         const isBelowView: boolean = placeholderClientRect.top + placeholderClientRect.height > listComponentClientRect.top + listComponentClientRect.height;
         const isPlaceholderInFixedView: boolean = !isAboveView && !isBelowView;
         let newScrollTop: number = this.listComponentElement.scrollTop;
-        if (isAboveView) {
-            newScrollTop = this.placeholderElement.offsetTop;
-        } else if (isBelowView) {
-            newScrollTop = this.placeholderElement.offsetTop + this.placeholderVerticalSpaceValue - this.listComponentElement.clientHeight;
+        if (isAboveView || isBelowView) {
+            const topDifference: number = listComponentClientRect.top - placeholderClientRect.top;
+            if (isAboveView) {
+                newScrollTop = this.listComponentElement.scrollTop - topDifference;
+            } else if (isBelowView) {
+                newScrollTop = this.listComponentElement.scrollTop - topDifference + this.placeholderVerticalSpaceValue - this.listComponentElement.clientHeight;
+            }
         }
         const hasComponentBeenScrolled: boolean = this.dragStartData.initialComponentTop !== listComponentClientRect.top;
         return {
@@ -307,7 +325,17 @@ export class List {
     }
 
     private onDraggedElementPulled(): void {
-        console.warn("TRANSITION END");
+        // Rollback all the transformations
+        this.rollbackListTransformations();
+        // Change item position
+        const fromPosition: number = this.placeholderIndex;
+        const toPosition: number = this.filteredListMap[this.placeholderIndex];
+        this.changeItemPosition(fromPosition, toPosition);
+        // Attach draggedElement
+        this.attachDraggedElement();
+    }
+
+    private rollbackListTransformations(): void {
         // Remove animation to make the translations removals instant.
         this.listElement.classList.remove(this.listClassHooks.listTranslateSmooth);
         // Remove placeholder
@@ -321,27 +349,6 @@ export class List {
             // The reference to the placeholder is still in the array. Therefore it's translations is removed as well for the next drag process. THe original dragged element is never translated.
             this.removeTranslation(this.filteredDomList[i]);
         }
-        // Change item position
-        this.changeItemPosition(fromPosition, toPosition);
-        // Attach draggedElement
-        this.attachDraggedElement();
-        // Finalize operation
-        this.clearProcessDefinitions();
-    }
-
-    private cancelExternalDrag(): void {
-        document.removeEventListener("mousemove", this.onDragStart);
-        document.removeEventListener("mousemove", this.onDragMove);
-        document.removeEventListener("mouseup", this.onDragEnd);
-        document.removeEventListener("click", this.onActionClick);
-        this.toggleElementVisibility(this.externalDraggedElement, true);
-        const fromPosition: number = this.placeholderIndex;
-        const toPosition: number = this.filteredListMap[this.placeholderIndex];
-        // this.removePlaceholderAndTranslations(fromPosition, toPosition);
-        this.listElement.removeChild(this.draggedElement);
-        this.draggedElement.remove();
-        this.draggedElement = this.pureDraggedElement.cloneNode(true) as HTMLElement;
-        this.clearProcessDefinitions();
     }
 
     private clearProcessDefinitions(): void {
@@ -350,20 +357,21 @@ export class List {
         this.placeholderIndex = null;
         this.dragMode = DragMode.None;
         this.isDragging = false;
+        this.isProcessingDrag = false;
         this.placeholderVerticalSpaceValue = null;
         this.dragStartData = null;
         this.draggedElement = null;
-        this.isDraggingFromExternalSource = false;
+    }
+
+    private clearExternalProcessDefinitions(): void {
         this.externalDraggedElement = null;
     }
 
     private onActionClick(e: MouseEvent): void {
-        if (!this.isDragging) {
-            document.removeEventListener("mousemove", this.onDragStart);
-            const itemIndex: number = Array.from(this.listElement.children).indexOf(this.draggedElement);
-            this.clearProcessDefinitions();
-            this.onClickNotifier(itemIndex);
-        }
+        document.removeEventListener("mousemove", this.onDragStart);
+        const itemIndex: number = Array.from(this.listElement.children).indexOf(this.draggedElement);
+        this.clearProcessDefinitions();
+        this.onClickNotifier(itemIndex);
     }
 
     public onClickNotifier(itemIndex: number): void {
@@ -375,7 +383,7 @@ export class List {
     }
 
     public onInsertNotifier(position: number): void {
-        console.warn(`INSERT ${position}`);
+        console.warn(`INSERT AT ${position}`);
     }
 
     private changeItemPosition(fromIndex: number, toIndex: number): void {
@@ -383,7 +391,6 @@ export class List {
         const child: Node = this.listElement.children.item(fromIndex);
         const toNode: Node = this.listElement.children.item(beforeIndex);
         this.listElement.insertBefore(child, toNode);
-        this.onPositionChangeNotifier(fromIndex, toIndex);
     }
 
     private removeTranslation(element: HTMLElement): void {
@@ -395,17 +402,25 @@ export class List {
     }
 
     private insertMatchingPlaceholder(mirrorElement: HTMLElement): void {
-        this.placeholderElement.style.height = `${mirrorElement.offsetHeight}px`;
-        this.placeholderElement.style.width = `${mirrorElement.offsetWidth}px`;
-        this.draggedElement.after(this.placeholderElement);
+        if (this.dragMode === DragMode.Internal) {
+            this.placeholderElement.style.height = `${mirrorElement.offsetHeight}px`;
+            this.placeholderElement.style.width = `${mirrorElement.offsetWidth}px`;
+            this.draggedElement.after(this.placeholderElement);
+        } else {
+            this.placeholderElement.style.height = `${0}px`;
+            this.placeholderElement.style.width = `${0}px`;
+            this.draggedElement.after(this.placeholderElement);
+            this.placeholderElement.style.height = `${mirrorElement.offsetHeight}px`;
+            this.placeholderElement.style.width = `${mirrorElement.offsetWidth}px`;
+        }
     }
 
-    private insertMachingPlaceholderOnExternalElementEnter(mirrorElement: HTMLElement): void {
-        this.placeholderElement.style.height = `${0}px`;
-        this.placeholderElement.style.width = `${0}px`;
-        this.draggedElement.after(this.placeholderElement);
-        this.placeholderElement.style.height = `${mirrorElement.offsetHeight}px`;
-        this.placeholderElement.style.width = `${mirrorElement.offsetWidth}px`;
+    private onExternalDragStart(externalElement: HTMLElement, contentElement: HTMLElement): void {
+        this.externalDraggedElement = externalElement;
+        this.clearRedundantStyles(contentElement);
+        this.externalDraggedContentElement = contentElement;
+        this.toggleExternalElementAccessListener(true);
+        document.addEventListener("mouseup", this.onOutOfListDragEnd);
     }
 
     private toggleElementVisibility(element: HTMLElement, isVisible: boolean): void {
@@ -432,58 +447,77 @@ export class List {
     }
 
     private onExternalElementEnter(e: MouseEvent): void {
+        e.stopPropagation();
+        document.removeEventListener("mouseup", this.onOutOfListDragEnd);
+        this.draggedElement = this.createItemElement(this.externalDraggedContentElement);
+        this.dragMode = DragMode.External;
         this.toggleElementVisibility(this.externalDraggedElement, false);
-        this.isDraggingFromExternalSource = true;
-        const firstListElement: HTMLElement = this.listElement.children.item(0) as HTMLElement;
-        let insertBeforeItem: HTMLElement | undefined;
-        if (firstListElement) {
-            const listComponentElementClientRect: ClientRect = this.listComponentElement.getBoundingClientRect();
-            const pointerInContainerHeight: number = e.clientY - listComponentElementClientRect.top;
-            const itemVerticalSpaceValue: number = this.getElementVerticalSpaceValue(firstListElement);
-            const scrollToPointerHeight: number = this.listComponentElement.scrollTop + pointerInContainerHeight;
-            const firstVisibleIndex: number = Math.floor(scrollToPointerHeight / itemVerticalSpaceValue);
-            insertBeforeItem = this.listElement.children.item(firstVisibleIndex) as HTMLElement | undefined;
-        }
-        this.listElement.insertBefore(this.draggedElement, insertBeforeItem);
-        const preventDefaultRef: () => void = e.preventDefault.bind(e);
-        const fakeDownEvent: TWriteable<MouseEvent> = { ...e };
-        const fakeMoveEvent: TWriteable<MouseEvent> = { ...e };
-        fakeDownEvent.preventDefault = preventDefaultRef;
-        fakeMoveEvent.preventDefault = preventDefaultRef;
+        // Insert element closest to the cursor.
+        const listComponentElementClientRect: ClientRect = this.listComponentElement.getBoundingClientRect();
+        const pointerOffsetTopFromComponent: number = e.clientY - listComponentElementClientRect.top;
+        const listOffsetTop: number = this.listComponentElement.scrollTop + pointerOffsetTopFromComponent;
+        const firstItemOverOffset: HTMLElement | undefined = this.findFirstNextSiblingToOffsetTop(listOffsetTop);
+        this.listElement.insertBefore(this.draggedElement, firstItemOverOffset);
+        // Dispatch fake events imitating the real click on the list.
+        const fakeDownEvent: TWriteable<MouseEvent> = { ...e, currentTarget: this.draggedElement };
+        const fakeMoveEvent: TWriteable<MouseEvent> = { ...e, currentTarget: this.draggedElement };
         const draggedElementClientRect: ClientRect = this.draggedElement.getBoundingClientRect();
         fakeDownEvent.clientX = draggedElementClientRect.left + draggedElementClientRect.width / 2;
         fakeDownEvent.clientY = draggedElementClientRect.top + draggedElementClientRect.height / 2;
-        fakeDownEvent.currentTarget = this.draggedElement;
         fakeMoveEvent.clientX = e.clientX;
         fakeMoveEvent.clientY = e.clientY;
-        fakeMoveEvent.currentTarget = this.draggedElement;
-        this.onActionDown(fakeDownEvent);
+        this.onActionDown(fakeDownEvent, DragMode.External);
         this.onDragMove(fakeMoveEvent);
     }
 
     private onExternalElementLeave(): void {
-        this.cancelExternalDrag();
+        this.stopExternalDrag();
     }
 
-    private setExternalDraggedElement(element: HTMLElement | null, title: string): void {
-        this.externalDraggedElement = element;
-        // const newItemElement: HTMLElement = this.createItemElement(title);
-        // this.pureDraggedElement = newItemElement.cloneNode(true) as HTMLElement;
-        // this.draggedElement = newItemElement;
+    private stopExternalDrag(): void {
+        document.removeEventListener("mousemove", this.onDragStart);
+        document.removeEventListener("mousemove", this.onDragMove);
+        document.removeEventListener("mouseup", this.onDragEnd);
+        this.rollbackListTransformations();
+        this.dragMode = DragMode.None;
+        this.toggleElementVisibility(this.externalDraggedElement, true);
+        this.draggedElement.remove();
+        this.clearProcessDefinitions();
     }
 
-    private externalDragStop(): void {
-        if (!this.isDragging) {
-            this.clearProcessDefinitions();
-        }
+    private findFirstNextSiblingToOffsetTop(offsetTop: number): HTMLElement | undefined {
+        let currentItemOffset: number = 0;
+        let fromItemTop: number = 0;
+        const listElements: HTMLElement[] = Array.from(this.listElement.children) as HTMLElement[];
+        const item: HTMLElement | undefined = listElements.find((element) => {
+            const elementVerticalSpace: number = element.offsetHeight + this.ITEM_MARGIN_BOTTOM;
+            const toItemTop: number = currentItemOffset + 0.5 * elementVerticalSpace;
+            if (offsetTop > fromItemTop && offsetTop <= toItemTop) {
+                return true;
+            }
+            fromItemTop = toItemTop;
+            currentItemOffset += elementVerticalSpace;
+        });
+        return item;
+    }
+
+    private onOutOfListDragEnd(e: MouseEvent): void {
+        document.removeEventListener("mouseup", this.onOutOfListDragEnd);
+        this.toggleExternalElementAccessListener(false);
+        this.clearExternalProcessDefinitions();
+    }
+
+    private onSuccesfullExternalDragEnd(e: MouseEvent): void {
+        this.onInsertNotifier(this.filteredListMap[this.placeholderIndex]);
+        this.toggleExternalElementAccessListener(false);
+        this.clearProcessDefinitions();
+        this.clearExternalProcessDefinitions();
     }
 
     public getListHandlers(): IListHandlers {
         return {
             toggleDropzone: this.toggleDropzone,
-            toggleExternalElementAccessListener: this.toggleExternalElementAccessListener,
-            setExternalDraggedElement: this.setExternalDraggedElement,
-            externalDragStop: this.externalDragStop,
+            onExternalDragStart: this.onExternalDragStart
         }
     }
 }

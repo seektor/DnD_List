@@ -1,6 +1,4 @@
 export interface IListHandlers {
-    setExternalDraggedElement(element: HTMLElement, title: string): void;
+    onExternalDragStart(externalElement: HTMLElement, contentElement: HTMLElement): void;
     toggleDropzone: (isEnabled: boolean) => void;
-    toggleExternalElementAccessListener: (isEnabled: boolean) => void;
-    externalDragStop();
 }
