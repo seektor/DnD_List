@@ -8,10 +8,7 @@ import { TDragStartData } from "./structures/TDragStartData";
 import { DragMode } from "./structures/DragMode";
 import { smoothScroll } from "../../utils/smooth-scroll/smoothScroll";
 
-/* TODO: 1. Assuming I would like to have elements with different heights, there are 2 problems:
-    + The style.height property is being overwritten/cleared.
-    + Some of the calculations are much faster because they rely on the fact that each element has the same height. For exampler
-    calculations of the closest element.
+/* TODO: There is still a bug with a "dead scroll". Repro: Drag an element but stay on the placeholder position. Then scroll using wheel until the placeholder is vanished from view. Then DO NOT move the mouse. The return animation is invalid. It happens because before mouseUp is triggered the mouseEnter is triggered on the element below the cursor. Then probably during mouseUp calculations the positionChange transition is not done yet which leads to invalid calculations.
 */
 export class List {
 
@@ -37,6 +34,8 @@ export class List {
     private readonly itemAttributeHooks: TItemAttributeHooks = ItemAttributeHooks;
     // This property (in ms) has to match with the css translate time
     private readonly TRANSLATE_TIME: number = 200;
+    // Same for the margin
+    private readonly ITEM_MARGIN_BOTTOM: number = 10;
 
     constructor(container: HTMLElement) {
         this.bindMethods();
@@ -50,24 +49,34 @@ export class List {
         this.listElement = document.createElement("div");
         this.listElement.classList.add(this.listClassHooks.list, this.listClassHooks.listTranslateSmooth);
         this.listComponentElement.append(this.listElement);
-        const itemTemplate: string = require("../templates/item/item.tpl.html");
+        const itemTemplate: string = require("./templates/list-item.html");
+        const testContentTemplate: string = require("../templates/item/item.tpl.html");
         this.itemElementCloneBase = document.createRange().createContextualFragment(itemTemplate).firstChild as HTMLElement;
+        const testContentElement: HTMLElement = document.createRange().createContextualFragment(testContentTemplate).firstChild as HTMLElement;
         const listItems: HTMLElement[] = [];
         for (let i = 0; i <= 100; i++) {
-            const item: HTMLElement = this.createItemElement(i.toString());
+            const clonedTestContentElement: HTMLElement = testContentElement.cloneNode(true) as HTMLElement;
+            this.decorateContentElement(clonedTestContentElement, i.toString());
+            const item: HTMLElement = this.createItemElement(clonedTestContentElement);
             listItems.push(item);
         }
         this.listElement.append(...listItems);
         container.appendChild(this.listComponentElement);
     }
 
-    private createItemElement(title: string): HTMLElement {
-        const clonedItem: HTMLElement = this.itemElementCloneBase.cloneNode(true) as HTMLElement;
-        const titleElement: HTMLElement = clonedItem.querySelector(`[${this.itemAttributeHooks.itemTitle}]`);
+    private decorateContentElement(contentElement: HTMLElement, title: string): HTMLElement {
+        const titleElement: HTMLElement = contentElement.querySelector(`[${this.itemAttributeHooks.itemTitle}]`);
         titleElement.innerHTML = `Item ${title}`;
-        clonedItem.addEventListener("mousedown", this.onActionDown);
-        clonedItem.addEventListener("mouseenter", this.onDragEnter);
-        return clonedItem;
+        return contentElement;
+    }
+
+    private createItemElement(contentElement: HTMLElement): HTMLElement {
+        const clonedItemElement: HTMLElement = this.itemElementCloneBase.cloneNode(true) as HTMLElement;
+        contentElement.style.height = `${Math.floor(Math.random() * 40 + 60)}px`;
+        clonedItemElement.addEventListener("mousedown", this.onActionDown);
+        clonedItemElement.addEventListener("mouseenter", this.onDragEnter);
+        clonedItemElement.appendChild(contentElement);
+        return clonedItemElement;
     }
 
     private bindMethods(): void {
@@ -81,7 +90,7 @@ export class List {
         this.onExternalElementLeave = this.onExternalElementLeave.bind(this);
         this.setExternalDraggedElement = this.setExternalDraggedElement.bind(this);
         this.toggleExternalElementAccessListener = this.toggleExternalElementAccessListener.bind(this);
-        this.onDraggedElementTransitionEnd = this.onDraggedElementTransitionEnd.bind(this);
+        this.onDraggedElementPulled = this.onDraggedElementPulled.bind(this);
         this.onActionClick = this.onActionClick.bind(this);
         this.externalDragStop = this.externalDragStop.bind(this);
     }
@@ -138,6 +147,7 @@ export class List {
             return;
         }
         const positionChangeData: TPositionChangeData = this.buildPositionChangeData(draggedOverElement);
+        // Non placeholder items translations based on the current change.
         positionChangeData.affectedItemIndexes.forEach(i => {
             this.filteredListMap[i] += positionChangeData.affectedItemsPositionIncrementation;
             const positionDiff: number = this.filteredListMap[i] - i;
@@ -146,9 +156,25 @@ export class List {
             yItemTranslationValue === 0 ?
                 this.removeTranslation(itemElement) : this.setTranslation(itemElement, 0, yItemTranslationValue);
         });
-        const yPlaceholderTranslationValue: number = (positionChangeData.newPlaceholderPosition - this.placeholderIndex) * this.placeholderVerticalSpaceValue;
-        this.setTranslation(this.placeholderElement, 0, yPlaceholderTranslationValue);
+        // Placeholder translation based on total translation from the root.
         this.filteredListMap[this.placeholderIndex] = positionChangeData.newPlaceholderPosition;
+        const placeholderTranslationY: number = this.getCalculatedPlaceholderTranslationY();
+        this.setTranslation(this.placeholderElement, 0, placeholderTranslationY);
+    }
+
+    private getCalculatedPlaceholderTranslationY(): number {
+        const placeholderPositionDiff: number = this.filteredListMap[this.placeholderIndex] - this.placeholderIndex;
+        const placeholderDirectionMultiplier: number = Math.sign(placeholderPositionDiff);
+        const allMovedItemIndexes: number[] = new Array(Math.abs(placeholderPositionDiff)).fill(0).map((_val, i) => this.placeholderIndex + placeholderDirectionMultiplier * (i + 1));
+        return placeholderDirectionMultiplier * this.getItemsHeight(allMovedItemIndexes);
+    }
+
+    private getItemsHeight(itemIndexes: number[]): number {
+        const totalHeight: number = itemIndexes.reduce((sum, ind) => {
+            const elementHeight: number = this.filteredDomList[ind].offsetHeight + this.ITEM_MARGIN_BOTTOM;
+            return sum += elementHeight;
+        }, 0);
+        return totalHeight;
     }
 
     private buildPositionChangeData(draggedOverElement: HTMLElement): TPositionChangeData {
@@ -190,6 +216,7 @@ export class List {
     }
 
     private attachDraggedElement(): void {
+        this.removeTranslation(this.draggedElement);
         this.draggedElement.style.zIndex = "";
         this.draggedElement.style.pointerEvents = "";
         this.draggedElement.style.width = "";
@@ -197,7 +224,6 @@ export class List {
         this.draggedElement.style.position = "";
         this.draggedElement.style.top = "";
         this.draggedElement.style.left = "";
-        this.removeTranslation(this.draggedElement);
         this.draggedElement.classList.remove(this.listClassHooks.itemTranslateInstant);
     }
 
@@ -208,28 +234,33 @@ export class List {
         this.setTranslation(this.draggedElement, xTranslation, yTranslation);
     }
 
-    private onDragEnd(e: MouseEvent): void {
+    private async onDragEnd(e: MouseEvent): Promise<void> {
         document.removeEventListener("mouseup", this.onDragEnd);
         document.removeEventListener("mousemove", this.onDragMove);
         this.isDragging = false;
         const viewStatistics: TListViewStatistics = this.getViewStatistics();
-        this.adjustViewToPlaceholder(viewStatistics);
-        this.draggedElement.addEventListener("transitionend", this.onDraggedElementTransitionEnd);
-        this.pullElementToPlaceholder(viewStatistics);
+        const viewAdjustedPromise: Promise<void> = this.adjustViewToPlaceholder(viewStatistics);
+        const elementPulledPromise: Promise<void> = this.pullElementToPlaceholder(viewStatistics);
+        await Promise.all([viewAdjustedPromise, elementPulledPromise]).then(() => this.onDraggedElementPulled());
     }
 
-    private pullElementToPlaceholder(viewStatistics: TListViewStatistics): void {
+    private pullElementToPlaceholder(viewStatistics: TListViewStatistics): Promise<void> {
         this.draggedElement.classList.remove(this.listClassHooks.itemTranslateInstant);
+        let transitionEndResolveCallback: () => void;
+        const elementPulledPromise: Promise<void> = new Promise((res, rej) => {
+            transitionEndResolveCallback = res;
+        });
+        this.draggedElement.addEventListener("transitionend", () => transitionEndResolveCallback());
+        elementPulledPromise.then(() => this.draggedElement.removeEventListener("transitionend", this.onDraggedElementPulled));
         if (viewStatistics.hasComponentBeenScrolled) {
             // The calculations of multi levels transitions would be too complicated.
             this.removeTranslation(this.draggedElement);
             this.draggedElement.dispatchEvent(new TransitionEvent("transitionend"));
-            return;
+            return elementPulledPromise;
         }
         let scrollTopDifference: number = this.dragStartData.initialComponentScrollTop - viewStatistics.adjustedScrollTop;
-        const positionsDifference: number = this.filteredListMap[this.placeholderIndex] - this.placeholderIndex;
-        const placeholderYTranslation: number = positionsDifference * this.placeholderVerticalSpaceValue;
-        const yTranslationWithScroll: number = placeholderYTranslation + scrollTopDifference;
+        const placeholderTranslationY: number = this.getCalculatedPlaceholderTranslationY();
+        const yTranslationWithScroll: number = placeholderTranslationY + scrollTopDifference;
         const newTranslation: string = `translate(${0}px, ${yTranslationWithScroll}px)`;
         const currentTranslation: string = this.draggedElement.style.transform;
         if (newTranslation === currentTranslation) {
@@ -238,6 +269,7 @@ export class List {
         } else {
             this.setTranslation(this.draggedElement, 0, yTranslationWithScroll);
         }
+        return elementPulledPromise;
     }
 
     private getViewStatistics(): TListViewStatistics {
@@ -248,9 +280,9 @@ export class List {
         const isPlaceholderInFixedView: boolean = !isAboveView && !isBelowView;
         let newScrollTop: number = this.listComponentElement.scrollTop;
         if (isAboveView) {
-            newScrollTop = this.filteredListMap[this.placeholderIndex] * this.placeholderVerticalSpaceValue;
+            newScrollTop = this.placeholderElement.offsetTop;
         } else if (isBelowView) {
-            newScrollTop = ((this.filteredListMap[this.placeholderIndex] + 1) * this.placeholderVerticalSpaceValue) - this.listComponentElement.clientHeight;
+            newScrollTop = this.placeholderElement.offsetTop + this.placeholderVerticalSpaceValue - this.listComponentElement.clientHeight;
         }
         const hasComponentBeenScrolled: boolean = this.dragStartData.initialComponentTop !== listComponentClientRect.top;
         return {
@@ -260,15 +292,22 @@ export class List {
         }
     }
 
-    private adjustViewToPlaceholder(viewStatistics: TListViewStatistics): void {
+    private adjustViewToPlaceholder(viewStatistics: TListViewStatistics): Promise<void> {
+        let resolveCallback: () => void;
+        const viewAdjustedPromise: Promise<void> = new Promise((res, rej) => {
+            resolveCallback = res;
+        });
         if (!viewStatistics.isPlaceholderInFixedView && !viewStatistics.hasComponentBeenScrolled) {
             const distance: number = viewStatistics.adjustedScrollTop - this.listComponentElement.scrollTop;
-            smoothScroll(this.listComponentElement, this.TRANSLATE_TIME, distance);
+            smoothScroll(this.listComponentElement, this.TRANSLATE_TIME, distance, resolveCallback);
+        } else {
+            resolveCallback();
         }
+        return viewAdjustedPromise;
     }
 
-    private onDraggedElementTransitionEnd(e: TransitionEvent): void {
-        this.draggedElement.removeEventListener("transitionend", this.onDraggedElementTransitionEnd);
+    private onDraggedElementPulled(): void {
+        console.warn("TRANSITION END");
         // Remove animation to make the translations removals instant.
         this.listElement.classList.remove(this.listClassHooks.listTranslateSmooth);
         // Remove placeholder
@@ -316,7 +355,6 @@ export class List {
         this.draggedElement = null;
         this.isDraggingFromExternalSource = false;
         this.externalDraggedElement = null;
-        console.log(this.placeholderElement);
     }
 
     private onActionClick(e: MouseEvent): void {
@@ -329,15 +367,15 @@ export class List {
     }
 
     public onClickNotifier(itemIndex: number): void {
-        console.log(`CLICK: ${itemIndex}`);
+        console.warn(`CLICK: ${itemIndex}`);
     }
 
     public onPositionChangeNotifier(from: number, to: number): void {
-        console.log(`POSITION CHANGE FROM ${from} TO ${to}`);
+        console.warn(`POSITION CHANGE FROM ${from} TO ${to}`);
     }
 
     public onInsertNotifier(position: number): void {
-        console.log(`INSERT ${position}`);
+        console.warn(`INSERT ${position}`);
     }
 
     private changeItemPosition(fromIndex: number, toIndex: number): void {
@@ -429,9 +467,9 @@ export class List {
 
     private setExternalDraggedElement(element: HTMLElement | null, title: string): void {
         this.externalDraggedElement = element;
-        const newItemElement: HTMLElement = this.createItemElement(title);
-        this.pureDraggedElement = newItemElement.cloneNode(true) as HTMLElement;
-        this.draggedElement = newItemElement;
+        // const newItemElement: HTMLElement = this.createItemElement(title);
+        // this.pureDraggedElement = newItemElement.cloneNode(true) as HTMLElement;
+        // this.draggedElement = newItemElement;
     }
 
     private externalDragStop(): void {

@@ -4,7 +4,7 @@ import { easeInCubic } from "./easingFunctions";
     1. The user is scrolling manually during the processing.
     2. Resizes?
 */
-export function smoothScroll(container: HTMLElement, duration: number, distance: number): void {
+export function smoothScroll(container: HTMLElement, duration: number, distance: number, onEndCallback?: () => void): void {
 
     const startOffset: number = container.scrollTop;
     const destinationOffset: number = startOffset + distance;
@@ -22,6 +22,10 @@ export function smoothScroll(container: HTMLElement, duration: number, distance:
 
         if (container.scrollTop !== destinationOffset) {
             requestAnimationFrame(scroll);
+        } else {
+            if (onEndCallback) {
+                onEndCallback();
+            }
         }
     }
 

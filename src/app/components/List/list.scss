@@ -6,6 +6,7 @@
 }
 
 .list__list {
+    position: relative;
 
     & > * {
         margin-bottom: 10px;
@@ -29,6 +30,7 @@
     border-radius: 5px;
     margin-bottom: 10px;
     opacity: 0.5;
+    pointer-events: none;
     transition: transform 0.2s ease, height 0.2s ease;
 }
 
