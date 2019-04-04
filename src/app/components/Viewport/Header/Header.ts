@@ -1,5 +1,6 @@
 import HeaderClassHooks, { THeaderClassHooks } from "./structures/HeaderClassHooks";
 import HeaderAttributeHooks, { THeaderAttributeHooks } from "./structures/HeaderAttributeHooks";
+import { Utils } from "../../../utils/Utils";
 
 export class Header {
 
@@ -17,7 +18,7 @@ export class Header {
 
     private constructComponent(container: HTMLElement): void {
         const headerTemplate: string = require("./header.tpl.html");
-        const headerElement: HTMLElement = document.createRange().createContextualFragment(headerTemplate).firstElementChild as HTMLElement;
+        const headerElement: HTMLElement = Utils.createElementFromTemplate(headerTemplate);
         this.navbarElement = headerElement.querySelector(`[${HeaderAttributeHooks.navbar}]`);
         container.append(headerElement);
     }

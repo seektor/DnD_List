@@ -1,11 +1,12 @@
 .header {
     $height: 60px;
     display: flex;
-    background-color: #202124;
+    background-color: #152658;
     color: white;
     height: $height;
     line-height: $height;
     box-shadow: 0 2px 4px rgba(0,0,0,.5);
+    z-index: 10;
 
     &__title {
         height: $height;

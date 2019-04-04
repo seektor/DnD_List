@@ -3,11 +3,16 @@ import { Toolbox } from "./components/Toolbox/Toolbox";
 import { List } from "./components/List/List";
 import { smoothScroll } from "./utils/smooth-scroll/smoothScroll";
 import { Header } from "./components/Viewport/Header/Header";
+import { Container } from "./components/Viewport/Container/Container";
+import { Body } from "./components/Viewport/Body/Body";
 
 class App {
 
     constructor() {
         const header = new Header(document.body);
+        const body = new Body(document.body);
+        // const container = new Container().getContainerElement();
+        // document.body.append(container);
         // const toolbox = new Toolbox(document.getElementById("toolbox"));
         // const leftList = new List(document.getElementById("left-list"));
         // const rightList = new List(document.getElementById("right-list"));
