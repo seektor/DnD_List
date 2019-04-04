@@ -1,0 +1,37 @@
+.header {
+    $height: 60px;
+    display: flex;
+    background-color: #202124;
+    color: white;
+    height: $height;
+    line-height: $height;
+    box-shadow: 0 2px 4px rgba(0,0,0,.5);
+
+    &__title {
+        height: $height;
+        margin: 0px 40px;
+        font-family: "Roboto Mono",monospace;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: bold;
+        font-size: 19px;
+        flex-grow: 1;
+    }
+
+    &__navbar {
+        display: flex;
+        margin: 0px 60px;
+        color: gray;
+        cursor: pointer;
+
+        &>* {
+            padding: 0px 20px;
+        }
+
+        &-item--active {
+            color: white;
+            opacity: 1;
+            border-bottom: 5px solid white;
+        }
+    }
+}

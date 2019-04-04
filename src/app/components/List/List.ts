@@ -1,12 +1,12 @@
 import ListClassHooks, { TListClassHooks } from "./structures/ListClassHooks";
-import ItemAttributeHooks, { TItemAttributeHooks } from "../templates/item/structures/ItemAttributeHooks";
+import ItemAttributeHooks, { TItemAttributeHooks } from "../../templates/item/structures/ItemAttributeHooks";
 import { TPositionChangeData } from "./structures/TPositionChangeData";
 import { TListViewStatistics } from "./structures/TListViewStatistics";
 import { IListHandlers } from "./interfaces/IListHandlers";
-import { TWriteable } from "../interfaces/TWriteable";
 import { TDragStartData } from "./structures/TDragStartData";
 import { DragMode } from "./structures/DragMode";
 import { smoothScroll } from "../../utils/smooth-scroll/smoothScroll";
+import { TWriteable } from "../../structures/TWriteable";
 
 /* TODO: There is still a bug with a "dead scroll". Repro: Drag an element but stay on the placeholder position. Then scroll using wheel until the placeholder is vanished from view. Then DO NOT move the mouse. The return animation is invalid. It happens because before mouseUp is triggered the mouseEnter is triggered on the element below the cursor. Then probably during mouseUp calculations the positionChange transition is not done yet which leads to invalid calculations.
 */

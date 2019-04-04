@@ -1,7 +1,7 @@
-import ItemAttributeHooks, { TItemAttributeHooks } from "../templates/item/structures/ItemAttributeHooks";
+import ItemAttributeHooks, { TItemAttributeHooks } from "../../templates/item/structures/ItemAttributeHooks";
 import ToolboxClassHooks, { TToolboxClassHooks } from "./structures/ToolboxClassHooks";
-import { TCoordinates } from "../interfaces/TCoordinates";
 import { IListHandlers } from "../List/interfaces/IListHandlers";
+import { TCoordinates } from "../../structures/TCoordinates";
 
 export class Toolbox {
 

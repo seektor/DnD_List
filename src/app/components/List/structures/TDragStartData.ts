@@ -1,4 +1,4 @@
-import { TCoordinates } from "../../interfaces/TCoordinates";
+import { TCoordinates } from "../../../structures/TCoordinates";
 
 export interface TDragStartData {
     initialCoordinates: TCoordinates;
