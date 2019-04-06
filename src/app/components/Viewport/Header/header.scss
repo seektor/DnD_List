@@ -11,7 +11,6 @@
     &__title {
         height: $height;
         margin: 0px 40px;
-        font-family: "Roboto Mono",monospace;
         text-transform: uppercase;
         letter-spacing: 2px;
         font-weight: bold;
@@ -31,6 +30,7 @@
 
         &-item--active {
             color: white;
+            font-weight: bold;
             opacity: 1;
             border-bottom: 5px solid white;
         }
