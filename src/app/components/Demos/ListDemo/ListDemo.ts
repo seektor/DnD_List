@@ -1,5 +1,5 @@
 import { Utils } from "../../../utils/Utils";
-import { Container } from "../../Viewport/Container/Container";
+import { ContainerFactory } from "../../Viewport/Factories/ContainerFactory/ContainerFactory";
 
 export class ListDemo {
 
@@ -10,7 +10,7 @@ export class ListDemo {
     private construct(container: HTMLElement): void {
         const bodyTemplate: string = require("./list-demo.tpl.html");
         const bodyElement: HTMLElement = Utils.createElementFromTemplate(bodyTemplate);
-        const containerElement: HTMLElement = new Container().getContainerElement();
+        const containerElement: HTMLElement = ContainerFactory();
         bodyElement.append(containerElement);
         container.append(bodyElement);
     }
