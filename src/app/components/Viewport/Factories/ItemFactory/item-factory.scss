@@ -1,0 +1,50 @@
+.item-factory {
+    position: relative;
+    top: 100px;
+    left: 200px;
+
+    width: 300px;
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+
+    &__header {
+        height: 20px;
+    }
+
+    &__body {
+        display: flex;
+        flex-grow: 1;
+    }
+
+    &__side-content {
+        width: 20%;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+    }
+
+    &__avatar-wrapper {
+        position: relative;
+        width: 100%;
+
+        &:before {
+            content: '';
+            display: block;
+            padding-top: 100%;
+        }
+    }
+
+    &__avatar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background-color: #bbb;
+        border-radius: 50%;
+        display: inline-block;
+    }
+}

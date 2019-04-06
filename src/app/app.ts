@@ -3,7 +3,6 @@ import { Toolbox } from "./components/Toolbox/Toolbox";
 import { List } from "./components/List/List";
 import { smoothScroll } from "./utils/smooth-scroll/smoothScroll";
 import { Header } from "./components/Viewport/Header/Header";
-import { Container } from "./components/Viewport/Container/Container";
 import { Body } from "./components/Viewport/Body/Body";
 
 class App {

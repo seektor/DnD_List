@@ -1,5 +1,5 @@
 import ListClassHooks, { TListClassHooks } from "./structures/ListClassHooks";
-import ItemAttributeHooks, { TItemAttributeHooks } from "../../templates/item/structures/ItemAttributeHooks";
+import ItemAttributeHooks, { TItemFactoryAttributeHooks } from "../Viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks";
 import { TPositionChangeData } from "./structures/TPositionChangeData";
 import { TListViewStatistics } from "./structures/TListViewStatistics";
 import { IListHandlers } from "./interfaces/IListHandlers";
@@ -30,7 +30,7 @@ export class List {
     private isProcessingDrag: boolean = false;
 
     private readonly listClassHooks: TListClassHooks = ListClassHooks;
-    private readonly itemAttributeHooks: TItemAttributeHooks = ItemAttributeHooks;
+    private readonly itemAttributeHooks: TItemFactoryAttributeHooks = ItemAttributeHooks;
     // This property (in ms) has to match with the css translate time
     private readonly TRANSLATE_TIME: number = 200;
     // Same for the margin

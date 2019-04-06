@@ -1,11 +1,11 @@
-import ItemAttributeHooks, { TItemAttributeHooks } from "../../templates/item/structures/ItemAttributeHooks";
+import ItemAttributeHooks, { TItemFactoryAttributeHooks } from "../Viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks";
 import ToolboxClassHooks, { TToolboxClassHooks } from "./structures/ToolboxClassHooks";
 import { IListHandlers } from "../List/interfaces/IListHandlers";
 import { TCoordinates } from "../../structures/TCoordinates";
 
 export class Toolbox {
 
-    private readonly itemAttributeHooks: TItemAttributeHooks = ItemAttributeHooks;
+    private readonly itemAttributeHooks: TItemFactoryAttributeHooks = ItemAttributeHooks;
     private readonly toolboxClassHooks: TToolboxClassHooks = ToolboxClassHooks;
     private toolboxComponentElement: HTMLElement = null;
     private draggedElement: HTMLElement = null;

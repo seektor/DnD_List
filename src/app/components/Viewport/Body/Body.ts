@@ -1,5 +1,6 @@
 import { Utils } from "../../../utils/Utils";
 import { ListDemo } from "../../Demos/ListDemo/ListDemo";
+import { GridDemo } from "../../Demos/GridDemo/GridDemo";
 
 export class Body {
 
@@ -7,7 +8,8 @@ export class Body {
 
     constructor(container: HTMLElement) {
         this.constructComponent(container);
-        const listDemo = new ListDemo(this.bodyElement);
+        // const listDemo = new ListDemo(this.bodyElement);
+        const gridDemo = new GridDemo(this.bodyElement);
     }
 
     private constructComponent(container: HTMLElement): void {

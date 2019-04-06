@@ -8,10 +8,10 @@ export class ListDemo {
     }
 
     private construct(container: HTMLElement): void {
-        const bodyTemplate: string = require("./list-demo.tpl.html");
-        const bodyElement: HTMLElement = Utils.createElementFromTemplate(bodyTemplate);
+        const listTemplate: string = require("./list-demo.tpl.html");
+        const listElement: HTMLElement = Utils.createElementFromTemplate(listTemplate);
         const containerElement: HTMLElement = ContainerFactory();
-        bodyElement.append(containerElement);
-        container.append(bodyElement);
+        listElement.append(containerElement);
+        container.append(listElement);
     }
 }

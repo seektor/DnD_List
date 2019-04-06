@@ -19,7 +19,7 @@ export class Header {
     private constructComponent(container: HTMLElement): void {
         const headerTemplate: string = require("./header.tpl.html");
         const headerElement: HTMLElement = Utils.createElementFromTemplate(headerTemplate);
-        this.navbarElement = headerElement.querySelector(`[${HeaderAttributeHooks.navbar}]`);
+        this.navbarElement = Utils.getElementByAttribute(headerElement, HeaderAttributeHooks.navbar);
         container.append(headerElement);
     }
 
