@@ -64,8 +64,8 @@ export class List {
     }
 
     private decorateContentElement(contentElement: HTMLElement, title: string): HTMLElement {
-        const titleElement: HTMLElement = contentElement.querySelector(`[${this.itemAttributeHooks.itemTitle}]`);
-        titleElement.innerHTML = `Item ${title}`;
+        // const titleElement: HTMLElement = contentElement.querySelector(`[${this.itemAttributeHooks.itemTitle}]`);
+        // titleElement.innerHTML = `Item ${title}`;
         return contentElement;
     }
 

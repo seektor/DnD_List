@@ -26,8 +26,8 @@ export class Toolbox {
         const itemTemplate: string = require("../templates/item/item.tpl.html");
         const itemElement: HTMLElement = document.createRange().createContextualFragment(itemTemplate).firstElementChild as HTMLElement;
         itemElement.classList.add(this.toolboxClassHooks.toolboxItem);
-        const titleElement: HTMLElement = itemElement.querySelector(`[${this.itemAttributeHooks.itemTitle}]`);
-        titleElement.innerHTML = "Drag Me";
+        // const titleElement: HTMLElement = itemElement.querySelector(`[${this.itemAttributeHooks.itemTitle}]`);
+        // titleElement.innerHTML = "Drag Me";
         itemElement.addEventListener("mousedown", this.onDragStart);
         toolboxWrapper.appendChild(itemElement);
         container.appendChild(toolboxWrapper);
