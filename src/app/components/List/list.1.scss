@@ -1,0 +1,39 @@
+.list__list-component {
+    height: 100%;
+    overflow: auto;
+    transition: background-color 0.2s ease;
+    overflow-anchor: none;
+}
+
+.list__list {
+    position: relative;
+
+    & > * {
+        margin-bottom: 10px;
+    }
+}
+
+.list__list--highlighted {
+    background-color: lightskyblue;
+}
+
+.list__list--translate-smooth {
+    & > * {
+        transition: transform 0.2s ease;
+    }
+}
+
+.list__item-placeholder {
+    box-sizing: border-box;
+    border: 2px dashed black;
+    background-color: white;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+    pointer-events: none;
+    transition: transform 0.2s ease, height 0.2s ease;
+}
+
+.list__item--translate-instant {
+    transition: none;
+}
