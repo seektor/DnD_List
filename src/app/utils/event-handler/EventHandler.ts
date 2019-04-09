@@ -7,7 +7,7 @@ import { EventsMapCallbacks } from "./structures/EventsMapCallback";
 export class EventHandler {
 
     private syntheticEvent: SyntheticEvent;
-    private subscribersMap: WeakMap<HTMLElement, Partial<EventsMap>>;
+    private subscribersMap: WeakMap<Node, Partial<EventsMap>>;
 
     constructor() {
         this.syntheticEvent = this.createEvent();
@@ -24,13 +24,13 @@ export class EventHandler {
         }
     }
 
-    public addEventListener(element: HTMLElement, type: EventType, callback: SyntheticEventCallback): void {
+    public addEventListener(element: Node, type: EventType, callback: SyntheticEventCallback): void {
         if (!this.subscribersMap.has(element)) {
             this.subscribersMap.set(element, {});
         }
         const eventsMap: EventsMap = this.subscribersMap.get(element);
         if (!eventsMap[type]) {
-            eventsMap.type = [];
+            eventsMap[type] = [];
         }
         const callbacksObjects: EventsMapCallbacks[] = eventsMap[type];
         const mouseEventName: string = this.getMouseEventName(type);
