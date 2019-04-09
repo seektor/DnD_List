@@ -71,11 +71,11 @@ export class EventHandler {
     private getMouseEventName(type: EventType): string {
         switch (type) {
             case EventType.ActionEnd:
-                return "mouseend";
+                return "mouveup";
             case EventType.ActionMove:
                 return "mousemove";
             case EventType.ActionStart:
-                return "mousestart"
+                return "mousedown"
         }
     }
 
