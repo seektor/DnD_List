@@ -1,13 +1,13 @@
 import { SyntheticEvent } from "./structures/SyntheticEvent";
-import { EventsMap } from "./structures/EventsMap";
-import { EventType } from "./structures/EventType";
+import { PointerEventsMap } from "./structures/PointerEventsMap";
+import { PointerEventType } from "./structures/PointerEventType";
 import { SyntheticEventCallback, MouseEventCallback, TouchEventCallback } from "./structures/EventCallbacks";
-import { EventsMapCallbacks } from "./structures/EventsMapCallback";
+import { PointerEventsMapCallbacks } from "./structures/PointerEventsMapCallback";
 
-export class EventHandler {
+export class PointerEventHandler {
 
     private syntheticEvent: SyntheticEvent;
-    private subscribersMap: WeakMap<Node, Partial<EventsMap>>;
+    private subscribersMap: WeakMap<Node, Partial<PointerEventsMap>>;
 
     constructor() {
         this.syntheticEvent = this.createEvent();
@@ -24,15 +24,15 @@ export class EventHandler {
         }
     }
 
-    public addEventListener(element: Node, type: EventType, callback: SyntheticEventCallback): void {
+    public addEventListener(element: Node, type: PointerEventType, callback: SyntheticEventCallback): void {
         if (!this.subscribersMap.has(element)) {
             this.subscribersMap.set(element, {});
         }
-        const eventsMap: EventsMap = this.subscribersMap.get(element);
+        const eventsMap: PointerEventsMap = this.subscribersMap.get(element);
         if (!eventsMap[type]) {
             eventsMap[type] = [];
         }
-        const callbacksObjects: EventsMapCallbacks[] = eventsMap[type];
+        const callbacksObjects: PointerEventsMapCallbacks[] = eventsMap[type];
         const mouseEventName: string = this.getMouseEventName(type);
         const touchEventName: string = this.getTouchEventName(type);
         const mouseCallback: MouseEventCallback = (e: MouseEvent) => callback(this.mouseToSynthetic(e));
@@ -46,16 +46,16 @@ export class EventHandler {
         });
     }
 
-    public removeEventListener(element: HTMLElement, type: EventType, callback: SyntheticEventCallback): void {
+    public removeEventListener(element: HTMLElement, type: PointerEventType, callback: SyntheticEventCallback): void {
         if (!this.subscribersMap.has(element)) {
             return;
         }
-        const eventsMap: EventsMap = this.subscribersMap.get(element);
+        const eventsMap: PointerEventsMap = this.subscribersMap.get(element);
         if (!eventsMap[type]) {
             return;
         }
-        const callbacksObjects: EventsMapCallbacks[] = eventsMap[type];
-        const matchingCallbacksObjects: EventsMapCallbacks[] = callbacksObjects.filter(callbacksObject => callbacksObject.refCallback === callback);
+        const callbacksObjects: PointerEventsMapCallbacks[] = eventsMap[type];
+        const matchingCallbacksObjects: PointerEventsMapCallbacks[] = callbacksObjects.filter(callbacksObject => callbacksObject.refCallback === callback);
         const mouseEventName: string = this.getMouseEventName(type);
         const touchEventName: string = this.getTouchEventName(type);
         matchingCallbacksObjects.forEach((callbackObject) => {
@@ -68,24 +68,24 @@ export class EventHandler {
         }
     }
 
-    private getMouseEventName(type: EventType): string {
+    private getMouseEventName(type: PointerEventType): string {
         switch (type) {
-            case EventType.ActionEnd:
+            case PointerEventType.ActionEnd:
                 return "mouveup";
-            case EventType.ActionMove:
+            case PointerEventType.ActionMove:
                 return "mousemove";
-            case EventType.ActionStart:
+            case PointerEventType.ActionStart:
                 return "mousedown"
         }
     }
 
-    private getTouchEventName(type: EventType): string {
+    private getTouchEventName(type: PointerEventType): string {
         switch (type) {
-            case EventType.ActionEnd:
+            case PointerEventType.ActionEnd:
                 return "touchend";
-            case EventType.ActionMove:
+            case PointerEventType.ActionMove:
                 return "touchmove";
-            case EventType.ActionStart:
+            case PointerEventType.ActionStart:
                 return "touchstart"
         }
     }

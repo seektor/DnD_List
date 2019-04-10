@@ -1,6 +1,6 @@
 import { SyntheticEventCallback } from "./EventCallbacks";
 
-export interface EventsMapCallbacks {
+export interface PointerEventsMapCallbacks {
     refCallback: SyntheticEventCallback;
     mouseCallback: (e: MouseEvent) => void;
     touchCallback: (e: TouchEvent) => void;
