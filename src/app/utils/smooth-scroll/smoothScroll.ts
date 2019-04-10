@@ -1,4 +1,4 @@
-import { easeInCubic } from "./easingFunctions";
+import { easeInCubic } from "../easingFunctions";
 
 /* TODO: Unhandled situations: 
     1. The user is scrolling manually during the processing.
@@ -20,7 +20,7 @@ export function smoothScroll(container: HTMLElement, duration: number, distance:
         const newOffset: number = positionProgress * distance + startOffset;
         container.scrollTop = newOffset;
 
-        if (container.scrollTop !== destinationOffset) {
+        if (timeProgress !== 1) {
             requestAnimationFrame(scroll);
         } else {
             if (onEndCallback) {

@@ -18,7 +18,11 @@ export class Utils {
     }
 
     public static getElementByAttribute(element: HTMLElement, attribute: string): HTMLElement {
-        return element.querySelector(`[${attribute}]`);
+        if (element.hasAttribute(`[${attribute}]`)) {
+            return element;
+        } else {
+            return element.querySelector(`[${attribute}]`);
+        }
     }
 
     public static getRandomColor(): string {
@@ -32,5 +36,9 @@ export class Utils {
 
     public static createLinearGradient(colorA: string, colorB: string, angleInDeg: number): string {
         return `linear-gradient(${angleInDeg}deg, ${colorA}, ${colorB})`;
+    }
+
+    public static isNullOrUndefined<T>(arg: T | null | undefined): arg is null | undefined {
+        return (arg == null) || (typeof arg === `undefined`);
     }
 }

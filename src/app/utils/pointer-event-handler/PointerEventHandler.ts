@@ -10,11 +10,11 @@ export class PointerEventHandler {
     private subscribersMap: WeakMap<Node, Partial<PointerEventsMap>>;
 
     constructor() {
-        this.syntheticEvent = this.createEvent();
+        this.syntheticEvent = this.createSyntheticEvent();
         this.subscribersMap = new WeakMap();
     }
 
-    private createEvent(): SyntheticEvent {
+    private createSyntheticEvent(): SyntheticEvent {
         return {
             clientX: null,
             clientY: null,
@@ -90,28 +90,27 @@ export class PointerEventHandler {
         }
     }
 
-    private getNullifiedEvent(event: SyntheticEvent): SyntheticEvent {
+    private nullifyEvent(event: SyntheticEvent) {
         Object.keys(event).forEach((key) => this.syntheticEvent[key] = null);
-        return this.syntheticEvent;
     }
 
     private mouseToSynthetic(e: MouseEvent): SyntheticEvent {
-        const event: SyntheticEvent = this.getNullifiedEvent(this.syntheticEvent);
-        event.clientX = e.clientX;
-        event.clientY = e.clientY;
-        event.currentTarget = e.currentTarget;
-        event.stopPropagation = e.stopPropagation.bind(e);
-        event.target = e.target;
-        return event;
+        this.nullifyEvent(this.syntheticEvent);
+        this.syntheticEvent.clientX = e.clientX;
+        this.syntheticEvent.clientY = e.clientY;
+        this.syntheticEvent.currentTarget = e.currentTarget;
+        this.syntheticEvent.stopPropagation = e.stopPropagation.bind(e);
+        this.syntheticEvent.target = e.target;
+        return this.syntheticEvent;
     }
 
     private touchToSynthetic(e: TouchEvent): SyntheticEvent {
-        const event: SyntheticEvent = this.getNullifiedEvent(this.syntheticEvent);
-        event.clientX = e.touches[0].clientX;
-        event.clientY = e.touches[0].clientY;
-        event.currentTarget = e.currentTarget;
-        event.stopPropagation = e.stopPropagation.bind(e);
-        event.target = e.target;
-        return event;
+        this.nullifyEvent(this.syntheticEvent);
+        this.syntheticEvent.clientX = e.touches[0].clientX;
+        this.syntheticEvent.clientY = e.touches[0].clientY;
+        this.syntheticEvent.currentTarget = e.currentTarget;
+        this.syntheticEvent.stopPropagation = e.stopPropagation.bind(e);
+        this.syntheticEvent.target = e.target;
+        return this.syntheticEvent;
     }
 }

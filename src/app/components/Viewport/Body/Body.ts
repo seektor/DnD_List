@@ -8,8 +8,8 @@ export class Body {
 
     constructor(container: HTMLElement) {
         this.constructComponent(container);
-        const listDemo = new ListDemo(this.bodyElement);
-        // const gridDemo = new GridDemo(this.bodyElement);
+        // const listDemo = new ListDemo(this.bodyElement);
+        const gridDemo = new GridDemo(this.bodyElement);
     }
 
     private constructComponent(container: HTMLElement): void {
