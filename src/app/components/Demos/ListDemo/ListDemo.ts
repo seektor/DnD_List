@@ -22,13 +22,16 @@ export class ListDemo {
         const list: List = new List(containerElement, { itemMarginBottom: 20 });
         const lyrics: string = "Push me And then just touch me Till I can get my satisfaction Satisfaction Satisfaction Satisfaction Satisfaction Push me And then just touch me Till I can get my satisfaction Satisfaction";
         const lyricsArray: string[] = lyrics.split(" ");
+        const gradientColors: string[][] = [...Utils.gradientColors.values()];
         for (let i = 0; i < lyricsArray.length; i++) {
             const text: string = lyricsArray[i];
             let item: HTMLElement;
+            const currentGradientColors: string[] = gradientColors[i % gradientColors.length];
+            const background: string = Utils.createLinearGradient(currentGradientColors[0], currentGradientColors[1], 90)
             if (i % 5 !== 0) {
-                item = ItemWithTextFactory(Utils.getRandomColor(), text);
+                item = ItemWithTextFactory(background, text);
             } else {
-                item = ItemWithInputFactory(Utils.getRandomColor(), text);
+                item = ItemWithInputFactory(background, text, currentGradientColors[0]);
             }
             list.addItem(item);
         }

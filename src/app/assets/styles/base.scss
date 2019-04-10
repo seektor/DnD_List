@@ -4,3 +4,12 @@ html, body {
     display: flex;
     flex-direction: column;
 }
+
+input {
+    padding:5px; 
+    border:2px solid #ccc; 
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+}

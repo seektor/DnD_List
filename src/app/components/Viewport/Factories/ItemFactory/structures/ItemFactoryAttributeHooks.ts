@@ -1,11 +1,9 @@
 export interface TItemFactoryAttributeHooks {
     header: string;
-    avatar: string;
-    content: string;
+    body: string;
 }
 
 export default {
     header: "item-factory__header",
-    avatar: "item-factory__avatar",
-    content: "item-factory__main-content",
+    body: "item-factory__body",
 } as TItemFactoryAttributeHooks;
