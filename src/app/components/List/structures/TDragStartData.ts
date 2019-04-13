@@ -1,7 +1,9 @@
-import { TCoordinates } from "../../../structures/TCoordinates";
+import { TCoords } from "../../../structures/TCoords";
 
 export interface TDragStartData {
-    initialCoordinates: TCoordinates;
+    initialCoordinates: TCoords;
     initialComponentScrollTop: number;
     initialComponentTop: number;
+    initialComponentScrollLeft: number;
+    initialComponentLeft: number;
 }

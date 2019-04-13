@@ -46,7 +46,7 @@ export class PointerEventHandler {
         });
     }
 
-    public removeEventListener(element: HTMLElement, type: PointerEventType, callback: SyntheticEventCallback): void {
+    public removeEventListener(element: Node, type: PointerEventType, callback: SyntheticEventCallback): void {
         if (!this.subscribersMap.has(element)) {
             return;
         }
@@ -71,7 +71,7 @@ export class PointerEventHandler {
     private getMouseEventName(type: PointerEventType): string {
         switch (type) {
             case PointerEventType.ActionEnd:
-                return "mouveup";
+                return "mouseup";
             case PointerEventType.ActionMove:
                 return "mousemove";
             case PointerEventType.ActionStart:

@@ -19,20 +19,20 @@ export class GridDemo {
         container.append(gridElement);
 
         const grid: Grid = new Grid(containerElement, {
-            numberOfColumns: 8,
+            columnCount: 8,
             columnGap: 30,
             allowDynamicClassChange: true
         });
 
         const gradientColors: string[][] = [...Utils.gradientColors.values()];
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 3; i++) {
             const currentGradientColors: string[] = gradientColors[i % gradientColors.length];
             const background: string = Utils.createLinearGradient(currentGradientColors[0], currentGradientColors[1], 90)
             const item: HTMLElement = ItemWithTextFactory(background, i.toString());
             const itemHeader: HTMLElement = Utils.getElementByAttribute(item, ItemFactoryAttributeHooks.header);
             itemHeader.setAttribute(GridAttributeHooks.itemDragAnchor, '');
             itemHeader.style.cursor = 'pointer';
-            const classNames: string[] = [`grid-height-screen-${2}`, `grid-width-screen-${i + 1}`];
+            const classNames: string[] = [`grid-height-screen-${2}`, `grid-width-screen-${i + 2}`];
             item.classList.add(...classNames);
             grid.addItemWithClass(item);
         }

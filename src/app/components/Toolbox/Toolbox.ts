@@ -1,7 +1,7 @@
 import ItemAttributeHooks, { TItemFactoryAttributeHooks } from "../Viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks";
 import ToolboxClassHooks, { TToolboxClassHooks } from "./structures/ToolboxClassHooks";
 import { IListHandlers } from "../List/interfaces/IListHandlers";
-import { TCoordinates } from "../../structures/TCoordinates";
+import { TCoords } from "../../structures/TCoords";
 
 export class Toolbox {
 
@@ -9,7 +9,7 @@ export class Toolbox {
     private readonly toolboxClassHooks: TToolboxClassHooks = ToolboxClassHooks;
     private toolboxComponentElement: HTMLElement = null;
     private draggedElement: HTMLElement = null;
-    private initialCoordinates: TCoordinates = null;
+    private initialCoordinates: TCoords = null;
     private targetListHandlers: IListHandlers[] = [];
 
     constructor(container: HTMLElement) {

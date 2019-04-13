@@ -2,13 +2,15 @@
     height: 100%;
     width: 100%;
     display: grid;
+    position: relative;
     grid-column-gap: (12% / 7);
     grid-row-gap: 30px;
+    grid-auto-rows: 1fr;
 
     &__placeholder {
         box-sizing: border-box;
-        border: 2px dashed rgba(#000, 0.3);
-        background-color: white;
+        border: 3px dashed black;
+        background-color: #F1F1F1;
         border-radius: 5px;
         pointer-events: none;
     }
@@ -17,7 +19,7 @@
 // Items' classes \\
 
 $maxNumberOfColumns: 8;
-$maxElementNumberOfRows: 8;
+$maxNumberOfRowsForElement: 8;
 
 @for $width from 1 through $maxNumberOfColumns {
     .grid-width-screen-#{$width} {
@@ -25,7 +27,7 @@ $maxElementNumberOfRows: 8;
     }
 }
 
-@for $height from 1 through $maxElementNumberOfRows {
+@for $height from 1 through $maxNumberOfRowsForElement {
     .grid-height-screen-#{$height} {
         grid-row-start: span $height;
     }

@@ -41,4 +41,14 @@ export class Utils {
     public static isNullOrUndefined<T>(arg: T | null | undefined): arg is null | undefined {
         return (arg == null) || (typeof arg === `undefined`);
     }
+
+    public static createRange(from: number, to: number): number[] {
+        const length: number = Math.abs(from - to);
+        const baseArray: number[] = [...new Array(length).keys()];
+        if (from <= to) {
+            return baseArray;
+        } else {
+            return baseArray.reverse();
+        }
+    }
 }

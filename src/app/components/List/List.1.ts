@@ -108,11 +108,11 @@ export class List {
         }
         this.dragMode = dragMode;
         this.draggedElement = e.currentTarget as HTMLElement;
-        this.dragStartData = {
-            initialCoordinates: { x: e.clientX, y: e.clientY },
-            initialComponentScrollTop: this.listComponentElement.scrollTop,
-            initialComponentTop: this.listComponentElement.getBoundingClientRect().top,
-        }
+        // this.dragStartData = {
+        //     initialCoordinates: { x: e.clientX, y: e.clientY },
+        //     initialComponentScrollTop: this.listComponentElement.scrollTop,
+        //     initialComponentTop: this.listComponentElement.getBoundingClientRect().top,
+        // }
         document.addEventListener("mousemove", this.onDragStart);
         if (this.dragMode === DragMode.Internal) {
             document.addEventListener("click", this.onActionClick);
