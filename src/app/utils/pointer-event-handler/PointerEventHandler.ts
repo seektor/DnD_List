@@ -7,11 +7,11 @@ import { PointerEventsMapCallbacks } from "./structures/PointerEventsMapCallback
 export class PointerEventHandler {
 
     private syntheticEvent: SyntheticEvent;
-    private subscribersMap: WeakMap<Node, Partial<PointerEventsMap>>;
+    private subscribersMap: Map<Node, Partial<PointerEventsMap>>;
 
     constructor() {
         this.syntheticEvent = this.createSyntheticEvent();
-        this.subscribersMap = new WeakMap();
+        this.subscribersMap = new Map();
     }
 
     private createSyntheticEvent(): SyntheticEvent {
@@ -22,6 +22,13 @@ export class PointerEventHandler {
             stopPropagation: null,
             target: null,
         }
+    }
+
+    public flushAll(): void {
+        [...this.subscribersMap.keys()].forEach(element => {
+            const eventsMap: Partial<PointerEventsMap> = this.subscribersMap.get(element);
+            Object.keys(eventsMap).forEach(type => this.removeEventListenerByType(element, type as PointerEventType));
+        })
     }
 
     public addEventListener(element: Node, type: PointerEventType, callback: SyntheticEventCallback): void {
@@ -46,24 +53,44 @@ export class PointerEventHandler {
         });
     }
 
+    public removeEventListenerByType(element: Node, type: PointerEventType): void {
+        if (!this.subscribersMap.has(element)) {
+            return;
+        }
+        const eventsMap: Partial<PointerEventsMap> = this.subscribersMap.get(element);
+        if (!eventsMap[type]) {
+            return;
+        }
+        const mouseEventName: string = this.getMouseEventName(type);
+        const touchEventName: string = this.getTouchEventName(type);
+        eventsMap[type].forEach(callbacks => {
+            element.removeEventListener(mouseEventName, callbacks.mouseCallback);
+            element.removeEventListener(touchEventName, callbacks.touchCallback);
+        });
+        delete eventsMap[type];
+        if (Object.keys(eventsMap).length === 0) {
+            this.subscribersMap.delete(element);
+        }
+    }
+
     public removeEventListener(element: Node, type: PointerEventType, callback: SyntheticEventCallback): void {
         if (!this.subscribersMap.has(element)) {
             return;
         }
-        const eventsMap: PointerEventsMap = this.subscribersMap.get(element);
+        const eventsMap: Partial<PointerEventsMap> = this.subscribersMap.get(element);
         if (!eventsMap[type]) {
             return;
         }
-        const callbacksObjects: PointerEventsMapCallbacks[] = eventsMap[type];
-        const matchingCallbacksObjects: PointerEventsMapCallbacks[] = callbacksObjects.filter(callbacksObject => callbacksObject.refCallback === callback);
+        const eventsMapCallbacks: PointerEventsMapCallbacks[] = eventsMap[type];
+        const matchingEventsMapCallbacks: PointerEventsMapCallbacks[] = eventsMapCallbacks.filter(callbacks => callbacks.refCallback === callback);
         const mouseEventName: string = this.getMouseEventName(type);
         const touchEventName: string = this.getTouchEventName(type);
-        matchingCallbacksObjects.forEach((callbackObject) => {
-            element.removeEventListener(mouseEventName, callbackObject.mouseCallback);
-            element.removeEventListener(touchEventName, callbackObject.touchCallback);
-            callbacksObjects.splice(callbacksObjects.indexOf(callbackObject, 1));
+        matchingEventsMapCallbacks.forEach((callbacks) => {
+            element.removeEventListener(mouseEventName, callbacks.mouseCallback);
+            element.removeEventListener(touchEventName, callbacks.touchCallback);
+            eventsMapCallbacks.splice(eventsMapCallbacks.indexOf(callbacks, 1));
         });
-        if (callbacksObjects.length === 0) {
+        if (eventsMapCallbacks.length === 0) {
             this.subscribersMap.delete(element);
         }
     }
