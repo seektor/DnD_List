@@ -27,7 +27,8 @@ export class Grid {
 
     private readonly emptyMarker: number = -1;
     private columnCount: number;
-    private columnGap: number;
+    private columnGap: number; // ???
+    private coutner = 0;
     private allowDynamicClassChange: boolean;
 
     private dragState: TGridDragState | null = null;
@@ -41,8 +42,8 @@ export class Grid {
     }
 
     private processParams(params: TGrid) {
-        this.columnCount = params.columnCount;
-        this.columnGap = params.columnGap;
+        this.columnCount = params.colCount;
+        this.columnGap = params.colGap;
         this.allowDynamicClassChange = params.allowDynamicClassChange;
     }
 
@@ -55,8 +56,8 @@ export class Grid {
     private constructComponent(container: HTMLElement, params: TGrid) {
         const gridTemplate: string = require("./grid.tpl.html");
         const gridElement: HTMLElement = Utils.createElementFromTemplate(gridTemplate);
-        gridElement.style.gridTemplateColumns = `repeat(${params.columnCount}, 1fr)`;
-        gridElement.style.columnGap = `${params.columnGap}px`;
+        gridElement.style.gridTemplateColumns = `repeat(${params.colCount}, 1fr)`;
+        gridElement.style.columnGap = `${params.colGap}px`;
         this.gridElement = gridElement;
         container.append(gridElement);
         this.placeholderElement = this.createPlaceholderElement();
@@ -170,10 +171,18 @@ export class Grid {
         this.updatePlaceholderStyles(draggedElement);
         originalDragItemsList.splice(draggedElementIndex, 1, this.placeholderElement);
         this.dragState = this.createDragState(event, originalDragItemsList, draggedElement);
+
+        const draggedElementClientRect: ClientRect = this.dragState.draggedElement.getBoundingClientRect();
+        this.dragState.draggedElement.style.top = `${draggedElementClientRect.top}px`;
+        this.dragState.draggedElement.style.left = `${draggedElementClientRect.left}px`;
+        this.dragState.draggedElement.style.width = `${this.dragState.draggedElement.offsetWidth}px`;
+        this.dragState.draggedElement.style.height = `${this.dragState.draggedElement.offsetHeight}px`;
+        this.dragState.draggedElement.style.zIndex = "1";
+        this.dragState.draggedElement.style.pointerEvents = "none";
+
         this.dragState.draggedElement.after(this.placeholderElement);
         this.detachElement(this.dragState.draggedElement);
         this.isDragging = true;
-
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionMove, this.onDragMove);
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
     }
@@ -194,6 +203,7 @@ export class Grid {
             return;
         }
         const currentItemList: HTMLElement[] = this.getNewItemList(this.dragState.gridView.itemsList, this.dragState.placeholderIndex, currentPlaceholderIndex);
+        this.coutner += 1;
         const currentGridMapData: TGridMapData = this.createGridMapData(currentItemList, this.columnCount);
         const currentGridDimensions: TGridDimensions = GridUtils.calculateGridDimensions(this.gridElement, currentGridMapData.gridMap, this.columnCount, this.dragState.gridView.gridDimensions);
         const currentItemTranslations = this.createAnimations(this.dragState.gridView, currentItemList, currentGridMapData, currentGridDimensions);
@@ -203,7 +213,6 @@ export class Grid {
             gridMapData: currentGridMapData,
             itemTranslations: currentItemTranslations
         }
-        console.warn(currentPlaceholderIndex);
         this.dragState.placeholderIndex = currentPlaceholderIndex;
     }
 
@@ -219,7 +228,6 @@ export class Grid {
                 const xDirectTranslateValue: number = Utils.createRange(previousPlacement.x, currentPlacement.x).reduce((sum, curr) => sum += currentGridDimensions.columnWidths[curr] + currentGridDimensions.columnGap, 0) * Math.sign(currentPlacement.x - previousPlacement.x);
                 const yDirectTranslateValue: number = Utils.createRange(previousPlacement.y, currentPlacement.y).reduce((sum, curr) => sum += currentGridDimensions.rowHeights[curr] + currentGridDimensions.rowGap, 0) * Math.sign(currentPlacement.y - previousPlacement.y);
                 const adjustedXTranslateValue: number = previousTranslations.translateX + xDirectTranslateValue;
-                console.log(previousTranslations.translateX, xDirectTranslateValue, adjustedXTranslateValue, item);
                 const adjustedYTranslateValue: number = previousTranslations.translateY + yDirectTranslateValue;
                 currentItemTranslations.set(item, { translateX: adjustedXTranslateValue, translateY: adjustedYTranslateValue });
                 translations.push({
@@ -295,13 +303,7 @@ export class Grid {
     }
 
     private detachElement(element: HTMLElement): void {
-        const draggedElementClientRect: ClientRect = element.getBoundingClientRect();
-        element.style.top = `${draggedElementClientRect.top}px`;
-        element.style.left = `${draggedElementClientRect.left}px`;
-        element.style.width = `${element.offsetWidth}px`;
-        element.style.height = `${element.offsetHeight}px`;
-        element.style.zIndex = "1";
-        element.style.pointerEvents = "none";
+
         element.style.position = "fixed";
     }
 

@@ -1,5 +1,5 @@
 export interface TGrid {
-    columnCount: number;
-    columnGap: number;
+    colCount: number;
+    colGap: number;
     allowDynamicClassChange: boolean;
 }

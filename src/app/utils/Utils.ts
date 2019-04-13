@@ -44,12 +44,9 @@ export class Utils {
 
     public static createRange(from: number, to: number): number[] {
         const length: number = Math.abs(from - to);
-        const baseArray: number[] = [...new Array(length).keys()];
-        if (from <= to) {
-            return baseArray;
-        } else {
-            return baseArray.reverse();
-        }
+        const increment: number = Math.sign(to - from);
+        const baseArray: number[] = [...new Array(length).keys()].map((_val, ind) => from + increment * ind);
+        return baseArray;
     }
 
     public static moveItemInArray<T>(array: T[], from: number, to: number): void {

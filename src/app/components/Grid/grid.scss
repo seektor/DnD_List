@@ -18,8 +18,8 @@
 
 // Items' classes \\
 
-$maxNumberOfColumns: 8;
-$maxNumberOfRowsForElement: 8;
+$maxNumberOfColumns: 20;
+$maxNumberOfRowsForElement: 20;
 
 @for $width from 1 through $maxNumberOfColumns {
     .grid-width-screen-#{$width} {

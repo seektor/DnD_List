@@ -27,7 +27,7 @@ export class GridUtils {
                     currentColInd = 0;
                     continue;
                 }
-
+                currentColInd = insertColIndex;
                 this.extendMapShape(gridMap, currentRowInd, currentRowInd + rowspan, columnCount, emptyMarker);
                 this.setItemInMap(gridMap, itemMarker, currentColInd, currentRowInd, rowspan, colspan);
                 itemPlacements.set(item, {
@@ -39,7 +39,7 @@ export class GridUtils {
 
                 firstAllowedRowIndFromFlow = currentRowInd;
                 firstAllowedColIndFromFlow = currentColInd + colspan;
-                if (firstAllowedColIndFromFlow > columnCount) {
+                if (firstAllowedColIndFromFlow > columnCount - 1) {
                     firstAllowedRowIndFromFlow = currentRowInd + 1;
                     firstAllowedColIndFromFlow = 0;
                 }
@@ -55,7 +55,8 @@ export class GridUtils {
 
     private static getFirstFreeColumnIndex(row: Int8Array, startIndex: number, columnspan: number, emptyMarker: number): number | null {
         let freeColumnIndex: number = null;
-        for (let colInd: number = startIndex; colInd < row.length - columnspan; colInd++) {
+        const maxAllowedColumnIndex: number = Math.min(row.length - columnspan, row.length - 1);
+        for (let colInd: number = startIndex; colInd <= maxAllowedColumnIndex; colInd++) {
             const slice: Int8Array = row.slice(colInd, colInd + columnspan);
             if (slice.every(ind => ind === emptyMarker)) {
                 freeColumnIndex = colInd;
