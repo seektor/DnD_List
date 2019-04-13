@@ -219,6 +219,7 @@ export class Grid {
                 const xDirectTranslateValue: number = Utils.createRange(previousPlacement.x, currentPlacement.x).reduce((sum, curr) => sum += currentGridDimensions.columnWidths[curr] + currentGridDimensions.columnGap, 0) * Math.sign(currentPlacement.x - previousPlacement.x);
                 const yDirectTranslateValue: number = Utils.createRange(previousPlacement.y, currentPlacement.y).reduce((sum, curr) => sum += currentGridDimensions.rowHeights[curr] + currentGridDimensions.rowGap, 0) * Math.sign(currentPlacement.y - previousPlacement.y);
                 const adjustedXTranslateValue: number = previousTranslations.translateX + xDirectTranslateValue;
+                console.log(previousTranslations.translateX, xDirectTranslateValue, adjustedXTranslateValue, item);
                 const adjustedYTranslateValue: number = previousTranslations.translateY + yDirectTranslateValue;
                 currentItemTranslations.set(item, { translateX: adjustedXTranslateValue, translateY: adjustedYTranslateValue });
                 translations.push({
@@ -229,7 +230,8 @@ export class Grid {
                     toY: adjustedYTranslateValue,
                 })
             } else {
-                currentItemTranslations.set(item, { translateX: 0, translateY: 0 });
+                const previousTranslations: TTranslations = previousGridView.itemTranslations.get(item);
+                currentItemTranslations.set(item, { translateX: previousTranslations.translateX, translateY: previousTranslations.translateY });
             }
         });
         this.dragState.isTranslating = true;
@@ -242,7 +244,7 @@ export class Grid {
 
     private getNewItemList(itemList: HTMLElement[], previousPlaceholderIndex: number, newPlaceholderIndex: number): HTMLElement[] {
         const newItemList: HTMLElement[] = [...itemList];
-        [newItemList[previousPlaceholderIndex], newItemList[newPlaceholderIndex]] = [newItemList[newPlaceholderIndex], newItemList[previousPlaceholderIndex]];
+        Utils.moveItemInArray(newItemList, previousPlaceholderIndex, newPlaceholderIndex);
         return newItemList;
     }
 

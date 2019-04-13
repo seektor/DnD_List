@@ -46,7 +46,6 @@ export class GridUtils {
                 break;
             }
         });
-        console.log(itemsList, { gridMap, itemPlacements });
         return { gridMap, itemPlacements };
     }
 
