@@ -1,12 +1,10 @@
-import ItemAttributeHooks, { TItemFactoryAttributeHooks } from "../Viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks";
-import ToolboxClassHooks, { TToolboxClassHooks } from "./structures/ToolboxClassHooks";
+import ItemAttributeHooks from "../Viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks";
+import ToolboxClassHooks from "./structures/ToolboxClassHooks";
 import { IListHandlers } from "../List/interfaces/IListHandlers";
 import { TCoords } from "../../structures/TCoords";
 
 export class Toolbox {
 
-    private readonly itemAttributeHooks: TItemFactoryAttributeHooks = ItemAttributeHooks;
-    private readonly toolboxClassHooks: TToolboxClassHooks = ToolboxClassHooks;
     private toolboxComponentElement: HTMLElement = null;
     private draggedElement: HTMLElement = null;
     private initialCoordinates: TCoords = null;
@@ -21,11 +19,11 @@ export class Toolbox {
 
     private constructComponent(container: HTMLElement) {
         const toolboxWrapper: HTMLElement = document.createElement("div");
-        toolboxWrapper.classList.add(this.toolboxClassHooks.toolboxWrapper);
+        toolboxWrapper.classList.add(ToolboxClassHooks.toolboxWrapper);
         this.toolboxComponentElement = toolboxWrapper;
         const itemTemplate: string = require("../templates/item/item.tpl.html");
         const itemElement: HTMLElement = document.createRange().createContextualFragment(itemTemplate).firstElementChild as HTMLElement;
-        itemElement.classList.add(this.toolboxClassHooks.toolboxItem);
+        itemElement.classList.add(ToolboxClassHooks.toolboxItem);
         // const titleElement: HTMLElement = itemElement.querySelector(`[${this.itemAttributeHooks.itemTitle}]`);
         // titleElement.innerHTML = "Drag Me";
         itemElement.addEventListener("mousedown", this.onDragStart);

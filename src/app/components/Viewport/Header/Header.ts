@@ -1,5 +1,5 @@
-import HeaderClassHooks, { THeaderClassHooks } from "./structures/HeaderClassHooks";
-import HeaderAttributeHooks, { THeaderAttributeHooks } from "./structures/HeaderAttributeHooks";
+import HeaderClassHooks from "./structures/HeaderClassHooks";
+import HeaderAttributeHooks from "./structures/HeaderAttributeHooks";
 import { Utils } from "../../../utils/Utils";
 
 export class Header {

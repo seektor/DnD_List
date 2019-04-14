@@ -1,4 +1,4 @@
-import ListClassHooks, { TListClassHooks } from "./structures/ListClassHooks";
+import ListClassHooks from "./structures/ListClassHooks";
 import ItemAttributeHooks, { TItemFactoryAttributeHooks } from "../Viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks";
 import { TPositionChangeData } from "./structures/TPositionChangeData";
 import { TListViewStatistics } from "./structures/TListViewStatistics";
@@ -29,7 +29,6 @@ export class List {
     private isDragging: boolean = false;
     private isProcessingDrag: boolean = false;
 
-    private readonly listClassHooks: TListClassHooks = ListClassHooks;
     private readonly itemAttributeHooks: TItemFactoryAttributeHooks = ItemAttributeHooks;
     // This property (in ms) has to match with the css translate time
     private readonly TRANSLATE_TIME: number = 200;
@@ -44,9 +43,9 @@ export class List {
     private constructComponent(container: HTMLElement): void {
         this.placeholderElement = this.createPlaceholderElement();
         this.listComponentElement = document.createElement("div");
-        this.listComponentElement.classList.add(this.listClassHooks.listComponent);
+        this.listComponentElement.classList.add(ListClassHooks.listComponent);
         this.listElement = document.createElement("div");
-        this.listElement.classList.add(this.listClassHooks.list, this.listClassHooks.listTranslateSmooth);
+        this.listElement.classList.add(ListClassHooks.list, ListClassHooks.listTranslateSmooth);
         this.listComponentElement.append(this.listElement);
         const itemTemplate: string = require("./templates/list-item.html");
         const testContentTemplate: string = require("../templates/item/item.tpl.html");
@@ -98,7 +97,7 @@ export class List {
     private createPlaceholderElement(): HTMLElement {
         const placeholderElement: HTMLElement = document.createElement("div");
         placeholderElement.addEventListener("mouseenter", this.onDragEnter);
-        placeholderElement.classList.add(this.listClassHooks.itemPlaceholder);
+        placeholderElement.classList.add(ListClassHooks.itemPlaceholder);
         return placeholderElement;
     }
 
@@ -126,7 +125,7 @@ export class List {
         }
         this.isDragging = true;
         this.isProcessingDrag = true;
-        this.listElement.classList.add(this.listClassHooks.listTranslateSmooth);
+        this.listElement.classList.add(ListClassHooks.listTranslateSmooth);
         this.placeholderVerticalSpaceValue = this.getElementVerticalSpaceValue(this.draggedElement); this.insertMatchingPlaceholder(this.draggedElement);
         this.detachDraggedElement();
         // Placeholder is taking over the dragged element's index therefore the dragged element is removed from the index calculations.
@@ -215,7 +214,7 @@ export class List {
         this.draggedElement.style.left = `${draggedElementClientRect.left}px`;
         this.draggedElement.style.width = `${this.draggedElement.offsetWidth}px`;
         this.draggedElement.style.height = `${this.draggedElement.offsetHeight}px`;
-        this.draggedElement.classList.add(this.listClassHooks.itemTranslateInstant);
+        this.draggedElement.classList.add(ListClassHooks.itemTranslateInstant);
         this.draggedElement.style.zIndex = "1";
         this.draggedElement.style.pointerEvents = "none";
         this.draggedElement.style.position = "fixed";
@@ -223,7 +222,7 @@ export class List {
 
     private attachDraggedElement(): void {
         this.clearRedundantStyles(this.draggedElement);
-        this.draggedElement.classList.remove(this.listClassHooks.itemTranslateInstant);
+        this.draggedElement.classList.remove(ListClassHooks.itemTranslateInstant);
     }
 
     private clearRedundantStyles(element: HTMLElement): void {
@@ -260,7 +259,7 @@ export class List {
     }
 
     private pullElementToPlaceholder(viewStatistics: TListViewStatistics): Promise<void> {
-        this.draggedElement.classList.remove(this.listClassHooks.itemTranslateInstant);
+        this.draggedElement.classList.remove(ListClassHooks.itemTranslateInstant);
         let transitionEndResolveCallback: () => void;
         const elementPulledPromise: Promise<void> = new Promise((res, rej) => {
             transitionEndResolveCallback = res;
@@ -337,7 +336,7 @@ export class List {
 
     private rollbackListTransformations(): void {
         // Remove animation to make the translations removals instant.
-        this.listElement.classList.remove(this.listClassHooks.listTranslateSmooth);
+        this.listElement.classList.remove(ListClassHooks.listTranslateSmooth);
         // Remove placeholder
         this.listElement.removeChild(this.placeholderElement);
         // Remove translations
@@ -430,9 +429,9 @@ export class List {
 
     private toggleDropzone(isEnabled: boolean): void {
         if (isEnabled) {
-            this.listComponentElement.classList.add(this.listClassHooks.listHighlighted);
+            this.listComponentElement.classList.add(ListClassHooks.listHighlighted);
         } else {
-            this.listComponentElement.classList.remove(this.listClassHooks.listHighlighted);
+            this.listComponentElement.classList.remove(ListClassHooks.listHighlighted);
         }
     }
 
