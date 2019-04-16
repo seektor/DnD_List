@@ -18,11 +18,14 @@ import { TGridDimensions } from "./structures/TGridDimensions";
 import { TTranslations } from "../../structures/TTranslations";
 import { TGridItemSwapDirection } from "./structures/TGridItemSwapDirectiton";
 import { TCoords } from "../../structures/TCoords";
+import { autoScroll } from "../../utils/auto-scroll/autoScroll";
+import { Orientation } from "../../structures/Orientation";
 
 export class Grid {
 
     private gridElement: HTMLElement;
     private placeholderElement: HTMLElement;
+    private scrollableContainer: HTMLElement;
     private pointerEventHandler: PointerEventHandler;
 
     private readonly emptyMarker: number = -1;
@@ -54,7 +57,7 @@ export class Grid {
         this.onDragEnd = this.onDragEnd.bind(this);
     }
 
-    private constructComponent(container: HTMLElement, params: TGrid) {
+    private constructComponent(container: HTMLElement, params: TGrid): void {
         const gridTemplate: string = require("./grid.tpl.html");
         const gridElement: HTMLElement = Utils.createElementFromTemplate(gridTemplate);
         gridElement.style.gridTemplateColumns = `repeat(${params.columnCount}, minmax(min-content, 1fr))`;
@@ -63,6 +66,7 @@ export class Grid {
         this.gridElement = gridElement;
         container.append(gridElement);
         this.placeholderElement = this.createPlaceholderElement();
+        this.scrollableContainer = container;
     }
 
     private createPlaceholderElement(): HTMLElement {
@@ -161,6 +165,8 @@ export class Grid {
             placeholderIndex,
             originalDragItemsList: itemsList,
             gridView: gridView,
+            horizontalScrollCbs: null,
+            verticalScrollCbs: null,
             isTranslating: false,
         }
     }
@@ -187,6 +193,37 @@ export class Grid {
         this.isDragging = true;
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionMove, this.onDragMove);
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
+
+        const scrollableContainerRect: ClientRect = this.scrollableContainer.getBoundingClientRect();
+        const scX0: number = scrollableContainerRect.left;
+        const scX1: number = scrollableContainerRect.left + scrollableContainerRect.width;
+        const scY0: number = scrollableContainerRect.top;
+        const scY1: number = scrollableContainerRect.top + scrollableContainerRect.height;
+        const horizontalScrollTriggerWidthPerSide: number = scrollableContainerRect.width * 0.10;
+
+        // scroll a nie client?event
+        this.pointerEventHandler.addEventListener(this.scrollableContainer, PointerEventType.ActionMove, (e => {
+            let horizontalIncrement: number | null = null;
+            if (this.isBetween(e.clientX, scX0, scX0 + horizontalScrollTriggerWidthPerSide)) {
+                horizontalIncrement = -(e.clientX - scX0) * 0.1;
+            } else if (this.isBetween(e.clientX, scX0 + scrollableContainerRect.width - horizontalScrollTriggerWidthPerSide, scX0 + scrollableContainerRect.width)) {
+                horizontalIncrement = (horizontalScrollTriggerWidthPerSide - scX0 + scrollableContainerRect.width - e.clientX) * 0.1;
+            }
+            if (horizontalIncrement) {
+                if (this.dragState.horizontalScrollCbs) {
+                    this.dragState.horizontalScrollCbs.setIncrement(horizontalIncrement);
+                } else {
+                    this.dragState.horizontalScrollCbs = autoScroll(this.scrollableContainer, Orientation.Horizontal, horizontalIncrement);
+                }
+            } else if (this.dragState.horizontalScrollCbs) {
+                this.dragState.horizontalScrollCbs.cancel();
+                this.dragState.horizontalScrollCbs = null;
+            }
+        }));
+    }
+
+    private isBetween(value: number, min: number, max: number, inclusive?: boolean): boolean {
+        return value > min && value < max;
     }
 
     private onDragMove(event: SyntheticEvent): void {
@@ -201,7 +238,6 @@ export class Grid {
         const gridCoords: TCoords = GridUtils.getGridCoordsFromPointer(gridClientX, gridClientY, this.dragState.gridView.gridDimensions);
         const previousGridMap: Int8Array[] = this.dragState.gridView.gridMapData.gridMap;
 
-        // console.log(previousGridMap[gridCoords.y][gridCoords.x]);
 
 
 
@@ -237,7 +273,6 @@ export class Grid {
                 const adjustedXTranslateValue: number = previousTranslations.translateX + xDirectTranslateValue;
                 const adjustedYTranslateValue: number = previousTranslations.translateY + yDirectTranslateValue;
                 currentItemTranslations.set(item, { translateX: adjustedXTranslateValue, translateY: adjustedYTranslateValue });
-                console.log(previousTranslations.translateX, adjustedXTranslateValue, currentPlacement.x, previousGridView.gridMapData.itemPlacements.get(item), currentGridMapData, Utils.createRange(Math.min(previousPlacement.x, currentPlacement.x), Math.max(previousPlacement.x, currentPlacement.x)));
                 translations.push({
                     fromX: previousTranslations.translateX,
                     fromY: previousTranslations.translateY,

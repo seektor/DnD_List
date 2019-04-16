@@ -1,13 +1,8 @@
 import { easeInCubic } from "../easingFunctions";
 
-/* TODO: Unhandled situations: 
-    1. The user is scrolling manually during the processing.
-    2. Resizes?
-*/
 export function smoothScroll(container: HTMLElement, duration: number, distance: number, onEndCallback?: () => void): void {
 
     const startOffset: number = container.scrollTop;
-    const destinationOffset: number = startOffset + distance;
     const startTime: number = new Date().getTime();
     const easeFunction: (t: number) => number = easeInCubic;
     scroll();
