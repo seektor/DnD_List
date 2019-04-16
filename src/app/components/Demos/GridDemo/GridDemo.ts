@@ -19,10 +19,11 @@ export class GridDemo {
         gridElement.append(containerElement);
         container.append(gridElement);
 
+        this.load1x1Scenario(containerElement, 4, 20);
+
         // this.loadLoadTestScenario(containerElement);
         // this.loadStuffedScenario(containerElement, 10, 10);
         // this.loadDynamicHeightScenario(containerElement);
-        this.loadSingleRowScenario(containerElement, 16, 16);
         // this.loadCustomScenario(containerElement);
     }
 
@@ -62,18 +63,18 @@ export class GridDemo {
         }
     }
 
-    private loadStuffedScenario(containerElement: HTMLElement, colCount: number, rowCount: number): void {
+    private load1x1Scenario(containerElement: HTMLElement, rowCount: number, columnCount: number): void {
         const gridParams: TGrid = {
             allowDynamicClassChange: false,
-            rowGap: 30,
-            columnCount: colCount,
+            rowGap: 10,
+            columnCount: columnCount,
             columnGap: 10
         }
         const grid: Grid = new Grid(containerElement, gridParams);
         const gradientColors: string[][] = [...Utils.gradientColors.values()];
-        for (let rowInd = 0; rowInd < rowCount; rowInd++) {
-            for (let colInd = 0; colInd < colCount; colInd++) {
-                const item: HTMLElement = this.createClassItem(`[${rowInd}, ${colInd}]`, gradientColors[colInd % gradientColors.length], 1, 1);
+        for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+            for (let columnIndex = 0; columnIndex < columnCount; columnIndex++) {
+                const item: HTMLElement = this.createClassItem(`[${rowIndex}, ${columnIndex}]`, gradientColors[columnIndex % gradientColors.length], 1, 1);
                 grid.addItemWithClass(item);
             }
         }

@@ -57,7 +57,7 @@ export class Grid {
     private constructComponent(container: HTMLElement, params: TGrid) {
         const gridTemplate: string = require("./grid.tpl.html");
         const gridElement: HTMLElement = Utils.createElementFromTemplate(gridTemplate);
-        gridElement.style.gridTemplateColumns = `repeat(${params.columnCount}, minmax(0, 1fr))`;
+        gridElement.style.gridTemplateColumns = `repeat(${params.columnCount}, minmax(min-content, 1fr))`;
         gridElement.style.columnGap = `${params.columnGap}px`;
         gridElement.style.rowGap = `${params.rowGap}px`;
         this.gridElement = gridElement;
