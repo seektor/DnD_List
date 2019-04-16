@@ -27,8 +27,8 @@ export class Grid {
 
     private readonly emptyMarker: number = -1;
     private columnCount: number;
-    private columnGap: number; // ???
-    private coutner = 0;
+    private columnGap: number;
+    private rowGap: number;
     private allowDynamicClassChange: boolean;
 
     private dragState: TGridDragState | null = null;
@@ -42,8 +42,9 @@ export class Grid {
     }
 
     private processParams(params: TGrid) {
-        this.columnCount = params.colCount;
-        this.columnGap = params.colGap;
+        this.columnCount = params.columnCount;
+        this.columnGap = params.columnGap;
+        this.rowGap = params.rowGap;
         this.allowDynamicClassChange = params.allowDynamicClassChange;
     }
 
@@ -56,8 +57,9 @@ export class Grid {
     private constructComponent(container: HTMLElement, params: TGrid) {
         const gridTemplate: string = require("./grid.tpl.html");
         const gridElement: HTMLElement = Utils.createElementFromTemplate(gridTemplate);
-        gridElement.style.gridTemplateColumns = `repeat(${params.colCount}, 1fr)`;
-        gridElement.style.columnGap = `${params.colGap}px`;
+        gridElement.style.gridTemplateColumns = `repeat(${params.columnCount}, minmax(0, 1fr))`;
+        gridElement.style.columnGap = `${params.columnGap}px`;
+        gridElement.style.rowGap = `${params.rowGap}px`;
         this.gridElement = gridElement;
         container.append(gridElement);
         this.placeholderElement = this.createPlaceholderElement();
@@ -149,7 +151,7 @@ export class Grid {
         const dragStartData: TDragStartData = this.getDragStartData(event);
         const gridMapData: TGridMapData = this.createGridMapData(itemsList, this.columnCount);
         const placeholderIndex: number = itemsList.indexOf(this.placeholderElement);
-        const gridDimensions: TGridDimensions = GridUtils.calculateGridDimensions(this.gridElement, gridMapData.gridMap, this.columnCount, null);
+        const gridDimensions: TGridDimensions = GridUtils.calculateGridDimensions(this.gridElement, gridMapData.gridMap, this.columnCount, this.rowGap, this.columnGap, null);
         const itemTranslations: WeakMap<HTMLElement, TTranslations> = new WeakMap();
         itemsList.forEach(item => itemTranslations.set(item, { translateX: 0, translateY: 0 }));
         const gridView: TGridView = { gridDimensions, itemsList, gridMapData, itemTranslations };
@@ -198,14 +200,19 @@ export class Grid {
         const gridClientY: number = event.clientY - this.dragState.dragStartData.initialComponentTop;
         const gridCoords: TCoords = GridUtils.getGridCoordsFromPointer(gridClientX, gridClientY, this.dragState.gridView.gridDimensions);
         const previousGridMap: Int8Array[] = this.dragState.gridView.gridMapData.gridMap;
+
+        // console.log(previousGridMap[gridCoords.y][gridCoords.x]);
+
+
+
+
         const currentPlaceholderIndex: number = this.findNewPlaceholderIndex(previousGridMap, this.dragState.placeholderIndex, this.dragState.gridView.itemTranslations, gridCoords, gridClientX);
         if (this.dragState.placeholderIndex === currentPlaceholderIndex) {
             return;
         }
         const currentItemList: HTMLElement[] = this.getNewItemList(this.dragState.gridView.itemsList, this.dragState.placeholderIndex, currentPlaceholderIndex);
-        this.coutner += 1;
         const currentGridMapData: TGridMapData = this.createGridMapData(currentItemList, this.columnCount);
-        const currentGridDimensions: TGridDimensions = GridUtils.calculateGridDimensions(this.gridElement, currentGridMapData.gridMap, this.columnCount, this.dragState.gridView.gridDimensions);
+        const currentGridDimensions: TGridDimensions = GridUtils.calculateGridDimensions(this.gridElement, currentGridMapData.gridMap, this.columnCount, this.rowGap, this.columnGap, this.dragState.gridView.gridDimensions);
         const currentItemTranslations = this.createAnimations(this.dragState.gridView, currentItemList, currentGridMapData, currentGridDimensions);
         this.dragState.gridView = {
             itemsList: currentItemList,
@@ -225,11 +232,12 @@ export class Grid {
             const hasPlacementChanged: boolean = previousPlacement.x !== currentPlacement.x || previousPlacement.y !== currentPlacement.y;
             if (hasPlacementChanged) {
                 const previousTranslations: TTranslations = previousGridView.itemTranslations.get(item);
-                const xDirectTranslateValue: number = Utils.createRange(previousPlacement.x, currentPlacement.x).reduce((sum, curr) => sum += currentGridDimensions.columnWidths[curr] + currentGridDimensions.columnGap, 0) * Math.sign(currentPlacement.x - previousPlacement.x);
-                const yDirectTranslateValue: number = Utils.createRange(previousPlacement.y, currentPlacement.y).reduce((sum, curr) => sum += currentGridDimensions.rowHeights[curr] + currentGridDimensions.rowGap, 0) * Math.sign(currentPlacement.y - previousPlacement.y);
+                const xDirectTranslateValue: number = Utils.createRange(Math.min(previousPlacement.x, currentPlacement.x), Math.max(previousPlacement.x, currentPlacement.x)).reduce((sum, curr) => sum += currentGridDimensions.columnWidths[curr] + currentGridDimensions.columnGap, 0) * Math.sign(currentPlacement.x - previousPlacement.x);
+                const yDirectTranslateValue: number = Utils.createRange(Math.min(previousPlacement.y, currentPlacement.y), Math.max(previousPlacement.y, currentPlacement.y)).reduce((sum, curr) => sum += currentGridDimensions.rowHeights[curr] + currentGridDimensions.rowGap, 0) * Math.sign(currentPlacement.y - previousPlacement.y);
                 const adjustedXTranslateValue: number = previousTranslations.translateX + xDirectTranslateValue;
                 const adjustedYTranslateValue: number = previousTranslations.translateY + yDirectTranslateValue;
                 currentItemTranslations.set(item, { translateX: adjustedXTranslateValue, translateY: adjustedYTranslateValue });
+                console.log(previousTranslations.translateX, adjustedXTranslateValue, currentPlacement.x, previousGridView.gridMapData.itemPlacements.get(item), currentGridMapData, Utils.createRange(Math.min(previousPlacement.x, currentPlacement.x), Math.max(previousPlacement.x, currentPlacement.x)));
                 translations.push({
                     fromX: previousTranslations.translateX,
                     fromY: previousTranslations.translateY,
@@ -298,6 +306,8 @@ export class Grid {
     private updatePlaceholderStyles(mirrorItem: HTMLElement): void {
         const itemProperties: TGridItemProperties = this.getGridItemProperties(mirrorItem);
         this.setItemDisplayAttributes(this.placeholderElement, itemProperties.rowspan, itemProperties.colspan);
+        this.placeholderElement.style.width = `${mirrorItem.offsetWidth}px`;
+        this.placeholderElement.style.height = `${mirrorItem.offsetHeight}px`;
         this.placeholderElement.style.gridRowStart = `span ${itemProperties.rowspan}`;
         this.placeholderElement.style.gridColumnStart = `span ${itemProperties.colspan}`;
     }

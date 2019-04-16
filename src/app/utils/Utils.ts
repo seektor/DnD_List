@@ -52,4 +52,8 @@ export class Utils {
     public static moveItemInArray<T>(array: T[], from: number, to: number): void {
         array.splice(to, 0, array.splice(from, 1)[0]);
     }
+
+    public static getRandomInt(min: number, max: number): number {
+        return Math.floor(Math.random() * (max)) + min;
+    }
 }

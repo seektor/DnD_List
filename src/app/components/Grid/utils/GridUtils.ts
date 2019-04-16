@@ -81,25 +81,19 @@ export class GridUtils {
         }
     }
 
-    public static calculateGridDimensions(gridElement: HTMLElement, gridMap: Int8Array[], columnCount: number, previousGridDimensions?: TGridDimensions | null): TGridDimensions {
+    public static calculateGridDimensions(gridElement: HTMLElement, gridMap: Int8Array[], columnCount: number, rowGap: number, columnGap: number, previousGridDimensions?: TGridDimensions | null): TGridDimensions {
         const rowCount: number = gridMap.length;
         if (previousGridDimensions && previousGridDimensions.rowCount === rowCount) {
             return { ...previousGridDimensions };
         }
         const computedProperties: CSSStyleDeclaration = window.getComputedStyle(gridElement);
         const rowHeights = computedProperties.gridTemplateRows.split(' ').map((value) => parseFloat(value));
-        const heightsSum: number = rowHeights.reduce((sum, current) => sum += current, 0);
-        const rowGap: number = (gridElement.clientHeight - heightsSum) / (rowCount - 1);
 
         let columnWidths: number[];
-        let columnGap: number;
         if (previousGridDimensions) {
             columnWidths = previousGridDimensions.columnWidths;
-            columnGap = previousGridDimensions.columnGap;
         } else {
             columnWidths = computedProperties.gridTemplateColumns.split(' ').map((value) => parseFloat(value));
-            const widthsSum: number = columnWidths.reduce((sum, current) => sum += current, 0);
-            columnGap = (gridElement.clientWidth - widthsSum) / (columnCount - 1);
         }
         return { columnCount, columnGap, columnWidths, rowCount, rowGap, rowHeights };
     }
