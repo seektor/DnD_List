@@ -1,34 +1,48 @@
 import { Orientation } from "../../structures/Orientation";
-import { IAutoScrollCallbacks } from "./structures/IAutoScrollCallbacks";
+import { IAutoScrollCallbacks } from "./interfaces/IAutoScrollCallbacks";
 
-export function autoScroll(container: HTMLElement, orientation: Orientation, increment: number): IAutoScrollCallbacks {
+export function autoScroll(container: HTMLElement, horizontalIncrement: number, verticalIncrement: number, onIncrementCallback?: () => void): IAutoScrollCallbacks {
 
     let isCancelled: boolean = false;
-    let currentIncrement: number = increment;
-    const throttleTime: number = 200;
+    let currentHorizontalIncrement: number = horizontalIncrement;
+    let currentVerticalIncrement: number = verticalIncrement;
+    const throttleTime: number = 16;
     let timeReference: number = throttleTime;
-    scrollHorizontally(throttleTime * 2);
+    scroll(throttleTime * 2);
     return {
         cancel: () => isCancelled = true,
-        setIncrement: (value) => currentIncrement = value,
+        setIncrement: setIncrement,
     };
 
-    function scrollHorizontally(now: DOMHighResTimeStamp): void {
-        const isScrolled: boolean = container.scrollLeft + container.clientWidth >= container.scrollWidth;
-        if (isScrolled || isCancelled) {
-            console.log("I AM DONE");
+    function setIncrement(orientation: Orientation, value: number) {
+        if (orientation === Orientation.Horizontal) {
+            currentHorizontalIncrement = value;
+        } else {
+            currentVerticalIncrement = value;
+        }
+    }
+
+    function scroll(now: DOMHighResTimeStamp): void {
+        let isScrolledHorizontally: boolean = horizontalIncrement > 0 ? container.scrollLeft + container.clientWidth >= container.scrollWidth : container.scrollLeft === 0;
+        let isScrolledVertically: boolean = verticalIncrement > 0 ? container.scrollTop + container.clientHeight >= container.scrollHeight : container.scrollTop === 0;
+        const canScroll: boolean = !isScrolledHorizontally || !isScrolledVertically;
+        if (!canScroll || isCancelled) {
             return;
         }
         const canRun: boolean = now - timeReference >= throttleTime;
         if (canRun) {
-            const incrementedScrollLeftValue: number = container.scrollLeft + currentIncrement;
-            console.log(Math.min(incrementedScrollLeftValue, container.scrollWidth));
+            const incrementedScrollLeftValue: number = container.scrollLeft + currentHorizontalIncrement;
             container.scrollLeft = Math.min(incrementedScrollLeftValue, container.scrollWidth);
+            const incrementedScrollTopValue: number = container.scrollTop + currentVerticalIncrement;
+            container.scrollTop = Math.min(incrementedScrollTopValue, container.scrollHeight);
             timeReference = now;
-            requestAnimationFrame(scrollHorizontally);
+            requestAnimationFrame(scroll);
+            onIncrementCallback && requestAnimationFrame(() => onIncrementCallback());
         } else {
-            requestAnimationFrame(scrollHorizontally);
+            requestAnimationFrame(scroll);
         }
     }
+
+
 
 }

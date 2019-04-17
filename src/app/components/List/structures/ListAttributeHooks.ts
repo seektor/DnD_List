@@ -3,5 +3,5 @@ export interface TListAttributeHooks {
 }
 
 export default {
-    itemsList: "list__list"
+    itemsList: "data-list__list"
 } as TListAttributeHooks;

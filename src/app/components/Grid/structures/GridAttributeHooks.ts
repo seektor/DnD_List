@@ -8,6 +8,6 @@ export interface TGridAttributeHooks {
 export default {
     rowspan: 'data-rowspan',
     colspan: 'data-colspan',
-    itemDragAnchor: 'grid__item-drag-anchor',
-    item: 'grid__item'
+    itemDragAnchor: 'data-grid__item-drag-anchor',
+    item: 'data-grid__item'
 } as TGridAttributeHooks;

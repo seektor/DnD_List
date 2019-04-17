@@ -6,7 +6,7 @@ import { TGridItemPlacement } from "../structures/TGridItemPlacement";
 export class GridUtils {
 
     public static createGridDataView(itemsList: HTMLElement[], columnCount: number, emptyMarker: number, rowspanExtractor: (item: HTMLElement) => number, colspanExtractor: (item: HTMLElement) => number): TGridMapData {
-        const gridMap: Int8Array[] = [];
+        const gridMap: Int16Array[] = [];
         const itemPlacements: WeakMap<HTMLElement, TGridItemPlacement> = new WeakMap();
         let firstAllowedRowIndFromFlow: number = 0;
         let firstAllowedColIndFromFlow: number = 0;
@@ -20,7 +20,7 @@ export class GridUtils {
                 if (!gridMap[currentRowInd]) {
                     gridMap[currentRowInd] = GridUtils.createEmptyGridRow(columnCount, emptyMarker);
                 }
-                const currentRow: Int8Array = gridMap[currentRowInd];
+                const currentRow: Int16Array = gridMap[currentRowInd];
                 const insertColIndex: number | null = this.getFirstFreeColumnIndex(currentRow, currentColInd, colspan, emptyMarker);
                 if (insertColIndex === null) {
                     currentRowInd += 1;
@@ -49,15 +49,15 @@ export class GridUtils {
         return { gridMap, itemPlacements };
     }
 
-    private static createEmptyGridRow(colCount: number, emptyMarker: number): Int8Array {
-        return new Int8Array(colCount).fill(emptyMarker);
+    private static createEmptyGridRow(colCount: number, emptyMarker: number): Int16Array {
+        return new Int16Array(colCount).fill(emptyMarker);
     }
 
-    private static getFirstFreeColumnIndex(row: Int8Array, startIndex: number, columnspan: number, emptyMarker: number): number | null {
+    private static getFirstFreeColumnIndex(row: Int16Array, startIndex: number, columnspan: number, emptyMarker: number): number | null {
         let freeColumnIndex: number = null;
         const maxAllowedColumnIndex: number = Math.min(row.length - columnspan, row.length - 1);
         for (let colInd: number = startIndex; colInd <= maxAllowedColumnIndex; colInd++) {
-            const slice: Int8Array = row.slice(colInd, colInd + columnspan);
+            const slice: Int16Array = row.slice(colInd, colInd + columnspan);
             if (slice.every(ind => ind === emptyMarker)) {
                 freeColumnIndex = colInd;
                 break;
@@ -66,7 +66,7 @@ export class GridUtils {
         return freeColumnIndex;
     }
 
-    private static extendMapShape(map: Int8Array[], fromRowInd: number, toRowInd: number, columnCount: number, emptyMarker: number): void {
+    private static extendMapShape(map: Int16Array[], fromRowInd: number, toRowInd: number, columnCount: number, emptyMarker: number): void {
         for (let rowInd = fromRowInd; rowInd < toRowInd; rowInd++) {
             if (!map[rowInd]) {
                 map[rowInd] = GridUtils.createEmptyGridRow(columnCount, emptyMarker);
@@ -74,14 +74,14 @@ export class GridUtils {
         }
     }
 
-    private static setItemInMap(map: Int8Array[], marker: number, x: number, y: number, rowspan: number, colspan: number) {
+    private static setItemInMap(map: Int16Array[], marker: number, x: number, y: number, rowspan: number, colspan: number) {
         for (let rowInd = y; rowInd < y + rowspan; rowInd++) {
             const dataRow: number[] = new Array(colspan).fill(marker);
             map[rowInd].set(dataRow, x);
         }
     }
 
-    public static calculateGridDimensions(gridElement: HTMLElement, gridMap: Int8Array[], columnCount: number, rowGap: number, columnGap: number, previousGridDimensions?: TGridDimensions | null): TGridDimensions {
+    public static calculateGridDimensions(gridElement: HTMLElement, gridMap: Int16Array[], columnCount: number, rowGap: number, columnGap: number, previousGridDimensions?: TGridDimensions | null): TGridDimensions {
         const rowCount: number = gridMap.length;
         if (previousGridDimensions && previousGridDimensions.rowCount === rowCount) {
             return { ...previousGridDimensions };
@@ -95,6 +95,7 @@ export class GridUtils {
         } else {
             columnWidths = computedProperties.gridTemplateColumns.split(' ').map((value) => parseFloat(value));
         }
+        console.log(columnWidths);
         return { columnCount, columnGap, columnWidths, rowCount, rowGap, rowHeights };
     }
 
@@ -125,7 +126,7 @@ export class GridUtils {
         }
     }
 
-    public static findFirstNonEmptyValueFromFlowLeft(gridMap: Int8Array[], fromCoords: TCoords, emptyMarker: number): number | null {
+    public static findFirstNonEmptyValueFromFlowLeft(gridMap: Int16Array[], fromCoords: TCoords, emptyMarker: number): number | null {
         const colCount: number = gridMap[fromCoords.y].length;
         let nonEmptyValue: number | null = null;
         scanner:

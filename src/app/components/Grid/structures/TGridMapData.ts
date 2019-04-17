@@ -1,6 +1,6 @@
 import { TGridItemPlacement } from "./TGridItemPlacement";
 
 export interface TGridMapData {
-    gridMap: Int8Array[];
+    gridMap: Int16Array[];
     itemPlacements: WeakMap<HTMLElement, TGridItemPlacement>;
 }

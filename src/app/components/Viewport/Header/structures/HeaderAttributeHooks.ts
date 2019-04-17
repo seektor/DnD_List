@@ -3,5 +3,5 @@ export interface THeaderAttributeHooks {
 }
 
 export default {
-    navbar: "header__navbar",
+    navbar: "data-header__navbar",
 } as THeaderAttributeHooks;

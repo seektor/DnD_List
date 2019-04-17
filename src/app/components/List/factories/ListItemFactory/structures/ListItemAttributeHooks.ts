@@ -5,7 +5,7 @@ export interface TListItemAttributeHooks {
 }
 
 export default {
-    item: "list-item-factory",
-    dragAnchor: "list-item__drag-anchor",
-    clickAnchor: "list-item__click-anchor",
+    item: "data-list-item-factory",
+    dragAnchor: "data-list-item__drag-anchor",
+    clickAnchor: "data-list-item__click-anchor",
 } as TListItemAttributeHooks;

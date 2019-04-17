@@ -19,7 +19,7 @@ export class GridDemo {
         gridElement.append(containerElement);
         container.append(gridElement);
 
-        this.load1x1Scenario(containerElement, 4, 20);
+        this.load1x1Scenario(containerElement, 2, 20);
 
         // this.loadLoadTestScenario(containerElement);
         // this.loadStuffedScenario(containerElement, 10, 10);
