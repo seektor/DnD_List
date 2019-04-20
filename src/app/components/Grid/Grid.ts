@@ -54,7 +54,10 @@ export class Grid {
     private constructComponent(container: HTMLElement, params: TGrid): void {
         const gridTemplate: string = require("./grid.tpl.html");
         const gridElement: HTMLElement = Utils.createElementFromTemplate(gridTemplate);
-        gridElement.style.gridTemplateColumns = `repeat(${params.columnCount}, 1fr)`;
+        const contStles = window.getComputedStyle(container);
+        const wif = container.clientWidth - parseFloat(contStles.paddingLeft) - parseFloat(contStles.paddingRight);
+        const colWidth: number = (wif - (params.columnCount - 1) * params.columnGap) / params.columnCount;
+        gridElement.style.gridTemplateColumns = `repeat(${params.columnCount}, ${100}px)`;
         gridElement.style.columnGap = `${params.columnGap}px`;
         gridElement.style.rowGap = `${params.rowGap}px`;
         this.gridElement = gridElement;
@@ -370,7 +373,30 @@ export class Grid {
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onDragMove);
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
         this.isDragging = false;
-        this.removeTranslation(this.dragState.draggedElement);
+        const placeholderPosition = this.dragState.gridView.gridMapData.itemPlacements.get(this.placeholderElement);
+        const placeholderTranslation = this.dragState.gridView.itemTranslations.get(this.placeholderElement);
+        console.log(placeholderPosition);
+        var style = window.getComputedStyle(this.dragState.draggedElement);
+        var matrix = new WebKitCSSMatrix(style.webkitTransform);
+        smoothTranslate([{
+            element: this.dragState.draggedElement,
+            fromX: matrix.m41,
+            fromY: matrix.m42,
+            toX: placeholderTranslation.translateX,
+            toY: placeholderTranslation.translateY
+        }], 1000, () => {
+            this.gridElement.removeChild(this.placeholderElement);
+            const from: number = this.dragState.originalDragItemsList.indexOf(this.placeholderElement);
+            const to: number = this.dragState.placeholderIndex;
+            console.log("SWITCH TAJM", from, to);
+            [...this.gridElement.children].forEach(c => this.removeTranslation(c as HTMLHtmlElement));
+            const beforeIndex: number = from < to ? to + 1 : to;
+            const child: Node = this.gridElement.children.item(from);
+            const toNode: Node = this.gridElement.children.item(beforeIndex);
+            this.gridElement.insertBefore(child, toNode);
+            this.dragState.draggedElement.style.position = '';
+        });
+        // this.removeTranslation(this.dragState.draggedElement);
     }
 
     private setTranslation(element: HTMLElement, x: number, y: number): void {

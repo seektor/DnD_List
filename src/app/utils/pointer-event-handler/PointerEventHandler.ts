@@ -43,7 +43,10 @@ export class PointerEventHandler {
         const mouseEventName: string = this.getMouseEventName(type);
         const touchEventName: string = this.getTouchEventName(type);
         const mouseCallback: MouseEventCallback = (e: MouseEvent) => callback(this.mouseToSynthetic(e));
-        const touchCallback: TouchEventCallback = (e: TouchEvent) => callback(this.touchToSynthetic(e));
+        const touchCallback: TouchEventCallback = (e: TouchEvent) => {
+            e.preventDefault();
+            callback(this.touchToSynthetic(e));
+        };
         element.addEventListener(mouseEventName, mouseCallback);
         element.addEventListener(touchEventName, touchCallback);
         callbacksObjects.push({

@@ -95,7 +95,6 @@ export class GridUtils {
         } else {
             columnWidths = computedProperties.gridTemplateColumns.split(' ').map((value) => parseFloat(value));
         }
-        console.log(columnWidths);
         return { columnCount, columnGap, columnWidths, rowCount, rowGap, rowHeights };
     }
 

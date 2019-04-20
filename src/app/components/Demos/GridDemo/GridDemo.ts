@@ -8,6 +8,13 @@ import { TGrid } from "../../Grid/structures/TGrid";
 
 export class GridDemo {
 
+    private gridParams: TGrid = {
+        allowDynamicClassChange: false,
+        columnCount: 12,
+        columnGap: 30,
+        rowGap: 30
+    }
+
     constructor(container: HTMLElement) {
         this.construct(container);
     }
@@ -19,12 +26,8 @@ export class GridDemo {
         gridElement.append(containerElement);
         container.append(gridElement);
 
-        this.load1x1Scenario(containerElement, 2, 20);
-
-        // this.loadLoadTestScenario(containerElement);
-        // this.loadStuffedScenario(containerElement, 10, 10);
-        // this.loadDynamicHeightScenario(containerElement);
-        // this.loadCustomScenario(containerElement);
+        // this.load1x1Scenario(containerElement, 2, 8);
+        this.loadInterlacedScenario(containerElement, 20);
     }
 
     private createPureItem(text: string, gradientColors: string[]): HTMLElement {
@@ -43,34 +46,8 @@ export class GridDemo {
         return item;
     }
 
-    private loadLoadTestScenario(containerElement: HTMLElement): void {
-        const numberOfItems: number = 20;
-        const maxColSpan: number = 2;
-        const maxRowSpan: number = 3;
-        const gridParams: TGrid = {
-            allowDynamicClassChange: true,
-            columnCount: 20,
-            rowGap: 30,
-            columnGap: 30
-        }
-        const grid: Grid = new Grid(containerElement, gridParams);
-        const gradientColors: string[][] = [...Utils.gradientColors.values()];
-        for (let i = 0; i < numberOfItems; i++) {
-            const rowspan: number = Math.floor(Math.random() * (maxRowSpan)) + 1;
-            const colspan: number = Math.floor(Math.random() * (maxColSpan)) + 1;
-            const item: HTMLElement = this.createClassItem(i.toString(), gradientColors[i % gradientColors.length], rowspan, colspan);
-            grid.addItemWithClass(item);
-        }
-    }
-
     private load1x1Scenario(containerElement: HTMLElement, rowCount: number, columnCount: number): void {
-        const gridParams: TGrid = {
-            allowDynamicClassChange: false,
-            rowGap: 10,
-            columnCount: columnCount,
-            columnGap: 10
-        }
-        const grid: Grid = new Grid(containerElement, gridParams);
+        const grid: Grid = new Grid(containerElement, this.gridParams);
         const gradientColors: string[][] = [...Utils.gradientColors.values()];
         for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
             for (let columnIndex = 0; columnIndex < columnCount; columnIndex++) {
@@ -80,50 +57,13 @@ export class GridDemo {
         }
     }
 
-    private loadDynamicHeightScenario(containerElement: HTMLElement) {
-        const grid: Grid = new Grid(containerElement, {
-            columnCount: 5,
-            rowGap: 30,
-            columnGap: 30,
-            allowDynamicClassChange: true
-        });
+    private loadInterlacedScenario(containerElement: HTMLElement, itemCount: number): void {
+        const grid: Grid = new Grid(containerElement, this.gridParams);
         const gradientColors: string[][] = [...Utils.gradientColors.values()];
-        const zero: HTMLElement = this.createClassItem('0', gradientColors[0], 1, 3);
-        const one: HTMLElement = this.createClassItem('1', gradientColors[1], 1, 2);
-        const two: HTMLElement = this.createClassItem('2', gradientColors[2], 1, 3);
-        const three: HTMLElement = this.createClassItem('3', gradientColors[3], 4, 1);
-        const four: HTMLElement = this.createClassItem('4', gradientColors[4], 1, 3);
-
-        [zero, one, two, three, four].forEach(item => grid.addItemWithClass(item));
-    }
-
-    private loadSingleRowScenario(containerElement: HTMLElement, columnCount: number, itemCount: number) {
-        const grid: Grid = new Grid(containerElement, {
-            columnCount: columnCount,
-            rowGap: 30,
-            columnGap: 30,
-            allowDynamicClassChange: false
-        });
-        const gradientColors: string[][] = [...Utils.gradientColors.values()];
-        let itemIndex: number = 0;
-        for (let columnInd = 0; columnInd < itemCount; columnInd++) {
-            const colspan: number = Utils.getRandomInt(1, 2);
-            const item: HTMLElement = this.createClassItem(`>>> ${itemIndex} <<<`, gradientColors[columnInd % gradientColors.length], 1, colspan);
-            itemIndex++;
+        for (let itemIndex = 0; itemIndex < itemCount; itemIndex++) {
+            const size: number = itemIndex % 2 === 0 ? 2 : 1;
+            const item: HTMLElement = this.createClassItem(`${itemIndex}`, gradientColors[itemIndex % gradientColors.length], size, size);
             grid.addItemWithClass(item);
         }
-    }
-
-    private loadCustomScenario(containerElement: HTMLElement) {
-        const grid: Grid = new Grid(containerElement, {
-            columnCount: 5,
-            rowGap: 30,
-            columnGap: 30,
-            allowDynamicClassChange: true
-        });
-        const gradientColors: string[][] = [...Utils.gradientColors.values()];
-        const zero: HTMLElement = this.createClassItem('0', gradientColors[0], 3, 1);
-        const one: HTMLElement = this.createClassItem('1', gradientColors[1], 1, 2);
-        [zero, one].forEach(item => grid.addItemWithClass(item));
     }
 }
