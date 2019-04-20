@@ -114,19 +114,22 @@ export class GridUtils {
 
     public static calculateGridDimensions(gridElement: HTMLElement, gridMap: Int16Array[], columnCount: number, rowGap: number, columnGap: number, previousGridDimensions?: TGridDimensions | null): TGridDimensions {
         const rowCount: number = gridMap.length;
+        console.log(previousGridDimensions);
         if (previousGridDimensions && previousGridDimensions.rowCount === rowCount) {
             return { ...previousGridDimensions };
         }
         const computedProperties: CSSStyleDeclaration = window.getComputedStyle(gridElement);
-        const rowHeights = computedProperties.gridTemplateRows.split(' ').map((value) => parseFloat(value));
+        const extractedRowHeight: number = parseFloat(computedProperties.gridTemplateRows.split(' ')[0]);
+        const rowHeight: number = isNaN(extractedRowHeight) ? 0 : extractedRowHeight;
 
-        let columnWidths: number[];
+        let columnWidth: number;
         if (previousGridDimensions) {
-            columnWidths = previousGridDimensions.columnWidths;
+            columnWidth = previousGridDimensions.columnWidth;
         } else {
-            columnWidths = computedProperties.gridTemplateColumns.split(' ').map((value) => parseFloat(value));
+            const extractedColumnWidth: number = parseFloat(computedProperties.gridTemplateColumns.split(' ')[0]);
+            columnWidth = isNaN(extractedColumnWidth) ? 0 : extractedColumnWidth;
         }
-        return { columnCount, columnGap, columnWidths, rowCount, rowGap, rowHeights };
+        return { columnCount, columnGap, columnWidth, rowCount, rowGap, rowHeight };
     }
 
     public static getGridCoordsFromPointer(gridClientX: number, gridClientY: number, gridDimensions: TGridDimensions): TCoords {
@@ -137,7 +140,7 @@ export class GridUtils {
         for (let colInd: number = 0; colInd < gridDimensions.columnCount; colInd++) {
             itemX = colInd;
             const gapStep: number = colInd === 0 ? 0.5 * gridDimensions.columnGap : gridDimensions.columnGap;
-            widthSum += gridDimensions.columnWidths[colInd] + gapStep;
+            widthSum += gridDimensions.columnWidth + gapStep;
             if (widthSum >= gridClientX) {
                 break;
             }
@@ -145,7 +148,7 @@ export class GridUtils {
         for (let rowInd: number = 0; rowInd < gridDimensions.rowCount; rowInd++) {
             itemY = rowInd;
             const gapStep: number = rowInd === 0 ? 0.5 * gridDimensions.columnGap : gridDimensions.columnGap;
-            heightSum += gridDimensions.rowHeights[rowInd] + gapStep;
+            heightSum += gridDimensions.rowHeight + gapStep;
             if (heightSum >= gridClientY) {
                 break;
             }

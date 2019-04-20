@@ -1,8 +1,8 @@
 export interface TGridDimensions {
     columnCount: number;
     rowCount: number;
-    columnWidths: number[];
-    rowHeights: number[];
+    columnWidth: number;
+    rowHeight: number;
     columnGap: number;
     rowGap: number;
 }

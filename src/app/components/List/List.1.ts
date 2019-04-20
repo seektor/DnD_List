@@ -3,7 +3,7 @@ import ItemAttributeHooks, { TItemFactoryAttributeHooks } from "../Viewport/Fact
 import { TPositionChangeData } from "./structures/TPositionChangeData";
 import { TListViewStatistics } from "./structures/TListViewStatistics";
 import { IListHandlers } from "./interfaces/IListHandlers";
-import { TDragStartData } from "./structures/TDragStartData";
+import { TInitialDragViewportParams } from "./structures/TInitialDragViewportParams";
 import { DragMode } from "./structures/DragMode";
 import { smoothScroll } from "../../utils/smooth-scroll/smoothScroll";
 import { TWriteable } from "../../structures/TWriteable";
@@ -21,7 +21,7 @@ export class List {
     private externalDraggedContentElement: HTMLElement = null;
 
     private placeholderVerticalSpaceValue: number = 0;
-    private dragStartData: TDragStartData = null;
+    private dragStartData: TInitialDragViewportParams = null;
     private dragMode: DragMode = DragMode.None;
     private filteredDomList: HTMLElement[] = [];
     private filteredListMap: number[] = [];
