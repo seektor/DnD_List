@@ -77,7 +77,7 @@ export class Grid {
     public addItemWithClass(content: HTMLElement): void {
         const item: HTMLElement = this.createItem(content);
         this.gridElement.append(item);
-        const itemProperties: TGridItemProperties = GridUtils.getGridItemProperties(item, this.gridParams.columnCount);
+        const itemProperties: TGridItemProperties = GridUtils.getGridItemProperties(content, this.gridParams.columnCount);
         this.setGridItemAttributes(item, itemProperties.rowspan, itemProperties.colspan);
         this.setGridItemStyles(item, itemProperties.rowspan, itemProperties.colspan);
         if (this.gridParams.allowDynamicClassChange) {
