@@ -12,7 +12,8 @@ export class GridDemo {
         columnCount: 12,
         columnGap: 30,
         rowGap: 30,
-        watchAnyResize: true,
+        watchAnyResize: false,
+        allowDynamicClassChange: true,
     }
 
     constructor(container: HTMLElement) {

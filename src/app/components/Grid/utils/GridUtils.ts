@@ -3,6 +3,7 @@ import { TGridDimensions } from "../structures/TGridDimensions";
 import { TCoords } from "../../../structures/TCoords";
 import { TGridItemPlacement } from "../structures/TGridItemPlacement";
 import { TGridParams } from "../structures/TGridParams";
+import { TGridItemProperties } from "../structures/TGridItemProperties";
 
 export class GridUtils {
 
@@ -21,6 +22,18 @@ export class GridUtils {
         const gridContentWidth: number = gridParentElement.clientWidth - parseFloat(parentStyles.paddingLeft) - parseFloat(parentStyles.paddingRight);
         const calculatedColumnWidth: number = (gridContentWidth - ((gridParams.columnCount - 1) * gridParams.columnGap)) / gridParams.columnCount;
         return Math.max(calculatedColumnWidth, gridParams.minColumnWidth || 0);
+    }
+
+    public static getGridItemProperties(item: HTMLElement, columnCount: number): TGridItemProperties {
+        const computedProperties: CSSStyleDeclaration = window.getComputedStyle(item);
+        const rowspanProperty: RegExpExecArray | null = /span \d/.exec(computedProperties.gridRowStart);
+        const colspanProperty: RegExpExecArray | null = /span \d/.exec(computedProperties.gridColumnStart);
+        const rowspan: number = rowspanProperty === null ? 1 : parseInt(rowspanProperty[0].split(' ')[1]);
+        const colspan: number = colspanProperty === null ? 1 : Math.min(parseInt(colspanProperty[0].split(' ')[1]), columnCount);
+        return {
+            colspan: colspan,
+            rowspan: rowspan,
+        }
     }
 
     public static createGridDataView(itemsList: HTMLElement[], columnCount: number, emptyMarker: number, rowspanExtractor: (item: HTMLElement) => number, colspanExtractor: (item: HTMLElement) => number): TGridMapData {

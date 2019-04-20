@@ -30,7 +30,6 @@ export class Grid {
 
     private readonly emptyMarker: number = -1;
     private gridParams: TGridParams;
-
     private dragState: TGridDragState | null = null;
 
     constructor(container: HTMLElement, params: TGridParams) {
@@ -75,22 +74,25 @@ export class Grid {
         return placeholderElement;
     }
 
-    public addItemWithClass(content: HTMLElement) {
+    public addItemWithClass(content: HTMLElement): void {
         const item: HTMLElement = this.createItem(content);
         this.gridElement.append(item);
-        const itemProperties: TGridItemProperties = this.getGridItemProperties(item);
+        const itemProperties: TGridItemProperties = GridUtils.getGridItemProperties(item, this.gridParams.columnCount);
         this.setGridItemAttributes(item, itemProperties.rowspan, itemProperties.colspan);
+        this.setGridItemStyles(item, itemProperties.rowspan, itemProperties.colspan);
         if (this.gridParams.allowDynamicClassChange) {
             this.setClassObserver(item);
         }
     }
 
     private setClassObserver(item: HTMLElement): void {
-        const observer: MutationObserver = new MutationObserver((mutations: MutationRecord[]) => {
-            const itemProperties: TGridItemProperties = this.getGridItemProperties(item);
+        const classChangeElement: HTMLElement = item.firstElementChild as HTMLElement;
+        const observer: MutationObserver = new MutationObserver((_mutations: MutationRecord[]) => {
+            const itemProperties: TGridItemProperties = GridUtils.getGridItemProperties(classChangeElement as HTMLElement, this.gridParams.columnCount);
             this.setGridItemAttributes(item, itemProperties.rowspan, itemProperties.colspan);
+            this.setGridItemStyles(item, itemProperties.rowspan, itemProperties.colspan);
         });
-        observer.observe(item, {
+        observer.observe(classChangeElement, {
             attributes: true,
             attributeFilter: ['class']
         });
@@ -101,27 +103,21 @@ export class Grid {
         item.setAttribute(GridAttributeHooks.colspan, colspan.toString());
     }
 
-    private getGridItemProperties(item: HTMLElement): TGridItemProperties {
-        const computedProperties: CSSStyleDeclaration = window.getComputedStyle(item);
-        const rowspanProperty: RegExpExecArray | null = /span \d/.exec(computedProperties.gridRowStart);
-        const colspanProperty: RegExpExecArray | null = /span \d/.exec(computedProperties.gridColumnStart);
-        const rowspan: number = rowspanProperty === null ? 0 : parseInt(rowspanProperty[0].split(' ')[1]);
-        const colspan: number = colspanProperty === null ? 0 : Math.min(parseInt(colspanProperty[0].split(' ')[1]), this.gridParams.columnCount);
-        return {
-            colspan: colspan,
-            rowspan: rowspan,
-        }
+    private setGridItemStyles(item: HTMLElement, rowspan: number, colspan: number): void {
+        item.style.gridRowStart = `span ${rowspan}`;
+        item.style.gridColumnStart = `span ${colspan}`;
     }
 
     private createItem(content: HTMLElement): HTMLElement {
-        const clonedItem: HTMLElement = content.cloneNode(true) as HTMLElement;
-        clonedItem.setAttribute(GridAttributeHooks.item, '');
-        const dragAnchor: HTMLElement = Utils.getElementByAttribute(clonedItem, GridAttributeHooks.itemDragAnchor);
+        const wrapper: HTMLElement = document.createElement('div');
+        wrapper.setAttribute(GridAttributeHooks.item, '');
+        wrapper.append(content);
+        const dragAnchor: HTMLElement = Utils.getElementByAttribute(content, GridAttributeHooks.itemDragAnchor);
         if (!dragAnchor) {
             throw new Error('Provided element has no dragAnchor attribute!');
         }
         this.pointerEventHandler.addEventListener(dragAnchor, PointerEventType.ActionStart, this.onDragStart);
-        return clonedItem;
+        return wrapper;
     }
 
     private createGridMapData(itemsList: HTMLElement[], columnCount: number): TGridMapData {
@@ -408,7 +404,7 @@ export class Grid {
     }
 
     private setPlaceholderStyles(mirrorGridItem: HTMLElement): void {
-        const itemProperties: TGridItemProperties = this.getGridItemProperties(mirrorGridItem);
+        const itemProperties: TGridItemProperties = GridUtils.getGridItemProperties(mirrorGridItem, this.gridParams.columnCount);
         this.setGridItemAttributes(this.placeholderElement, itemProperties.rowspan, itemProperties.colspan);
         this.placeholderElement.style.width = `${mirrorGridItem.offsetWidth}px`;
         this.placeholderElement.style.height = `${mirrorGridItem.offsetHeight}px`;
