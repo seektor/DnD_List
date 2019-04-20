@@ -1,6 +1,6 @@
-import { Utils } from "../../../utils/Utils";
-import { ListDemo } from "../../Demos/ListDemo/ListDemo";
-import { GridDemo } from "../../Demos/GridDemo/GridDemo";
+import { Utils } from "../../utils/Utils";
+import { ListDemo } from "../../demos/ListDemo/ListDemo";
+import { GridDemo } from "../../demos/GridDemo/GridDemo";
 
 export class Body {
 

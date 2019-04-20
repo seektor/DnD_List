@@ -1,10 +1,10 @@
-import { Utils } from "../../../utils/Utils";
-import { ContainerFactory } from "../../Viewport/Factories/ContainerFactory/ContainerFactory";
-import { Grid } from "../../Grid/Grid";
+import { Utils } from "../../utils/Utils";
+import { Grid } from "../../components/Grid/Grid";
+import GridAttributeHooks from "../../components/Grid/structures/GridAttributeHooks";
+import { TGridParams } from "../../components/Grid/structures/TGridParams";
 import { ItemWithTextFactory } from "../../Viewport/Factories/ItemFactory/ItemFactory";
 import ItemFactoryAttributeHooks from "../../Viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks";
-import GridAttributeHooks from "../../Grid/structures/GridAttributeHooks";
-import { TGridParams } from "../../Grid/structures/TGridParams";
+import { ContainerFactory } from "../../Viewport/Factories/ContainerFactory/ContainerFactory";
 
 export class GridDemo {
 

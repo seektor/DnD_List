@@ -1,5 +1,5 @@
 import ListClassHooks from "./structures/ListClassHooks";
-import ItemAttributeHooks, { TItemFactoryAttributeHooks } from "../Viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks";
+import ItemAttributeHooks, { TItemFactoryAttributeHooks } from "../../viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks";
 import { TPositionChangeData } from "./structures/TPositionChangeData";
 import { TListViewStatistics } from "./structures/TListViewStatistics";
 import { IListHandlers } from "./interfaces/IListHandlers";

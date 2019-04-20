@@ -2,8 +2,8 @@ import "./assets/styles/app.scss";
 import { Toolbox } from "./components/Toolbox/Toolbox";
 import { List } from "./components/List/List";
 import { smoothScroll } from "./utils/smooth-scroll/smoothScroll";
-import { Header } from "./components/Viewport/Header/Header";
-import { Body } from "./components/Viewport/Body/Body";
+import { Header } from "./viewport/Header/Header";
+import { Body } from "./viewport/Body/Body";
 
 class App {
 

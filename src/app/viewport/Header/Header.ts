@@ -1,6 +1,6 @@
 import HeaderClassHooks from "./structures/HeaderClassHooks";
 import HeaderAttributeHooks from "./structures/HeaderAttributeHooks";
-import { Utils } from "../../../utils/Utils";
+import { Utils } from "../../utils/Utils";
 
 export class Header {
 

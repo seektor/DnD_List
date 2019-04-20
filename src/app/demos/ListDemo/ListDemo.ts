@@ -1,7 +1,7 @@
-import { Utils } from "../../../utils/Utils";
+import { Utils } from "../../utils/Utils";
+import { List } from "../../components/List/List";
 import { ContainerFactory } from "../../Viewport/Factories/ContainerFactory/ContainerFactory";
-import { List } from "../../List/List";
-import { ItemFactory, ItemWithTextFactory, itemWithInputFactory as ItemWithInputFactory } from "../../Viewport/Factories/ItemFactory/ItemFactory";
+import { ItemWithTextFactory, ItemWithInputFactory } from "../../Viewport/Factories/ItemFactory/ItemFactory";
 
 export class ListDemo {
 

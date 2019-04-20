@@ -8,11 +8,11 @@
 @import "../../components/Grid/grid.scss";
 @import "../../components/List/templates/list-item.scss";
 @import "../../templates/item/item.scss";
-@import "../../components/Viewport/Header/header.scss";
-@import "../../components/Viewport/Body/body.scss";
+@import "../../viewport/Header/header.scss";
+@import "../../viewport/Body/body.scss";
 
-@import "../../components/Viewport/Factories/ContainerFactory/container-factory.scss";
-@import "../../components/Viewport/Factories/ItemFactory/item-factory.scss";
+@import "../../viewport/Factories/ContainerFactory/container-factory.scss";
+@import "../../viewport/Factories/ItemFactory/item-factory.scss";
 
-@import "../../components//Demos/ListDemo/list-demo.scss";
-@import "../../components//Demos/GridDemo/grid-demo.scss";
+@import "../../demos//ListDemo/list-demo.scss";
+@import "../../demos/GridDemo/grid-demo.scss";

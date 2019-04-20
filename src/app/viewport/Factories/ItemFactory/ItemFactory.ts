@@ -1,4 +1,4 @@
-import { Utils } from "../../../../utils/Utils";
+import { Utils } from "../../../utils/Utils";
 import ItemFactoryAttributeHooks from "./structures/ItemFactoryAttributeHooks";
 import ItemFactoryClassHooks from "./structures/ItemFactoryClassHooks";
 
@@ -18,7 +18,7 @@ export function ItemWithTextFactory(background: string, text: string): HTMLEleme
     return itemElement;
 }
 
-export function itemWithInputFactory(background: string, text: string, inputBorderColor?: string): HTMLElement {
+export function ItemWithInputFactory(background: string, text: string, inputBorderColor?: string): HTMLElement {
     const itemElement: HTMLElement = ItemFactory(background);
     const bodyElement: HTMLElement = Utils.getElementByAttribute(itemElement, ItemFactoryAttributeHooks.body);
     const input = document.createElement("input");

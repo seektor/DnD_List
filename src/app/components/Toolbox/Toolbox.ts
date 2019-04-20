@@ -1,4 +1,4 @@
-import ItemAttributeHooks from "../Viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks";
+import ItemAttributeHooks from "../../viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks";
 import ToolboxClassHooks from "./structures/ToolboxClassHooks";
 import { IListHandlers } from "../List/interfaces/IListHandlers";
 import { TCoords } from "../../structures/TCoords";
