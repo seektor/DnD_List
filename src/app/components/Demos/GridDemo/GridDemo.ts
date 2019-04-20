@@ -4,15 +4,15 @@ import { Grid } from "../../Grid/Grid";
 import { ItemWithTextFactory } from "../../Viewport/Factories/ItemFactory/ItemFactory";
 import ItemFactoryAttributeHooks from "../../Viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks";
 import GridAttributeHooks from "../../Grid/structures/GridAttributeHooks";
-import { TGrid } from "../../Grid/structures/TGrid";
+import { TGridParams } from "../../Grid/structures/TGridParams";
 
 export class GridDemo {
 
-    private gridParams: TGrid = {
-        allowDynamicClassChange: false,
+    private gridParams: TGridParams = {
         columnCount: 12,
         columnGap: 30,
-        rowGap: 30
+        rowGap: 30,
+        watchAnyResize: true,
     }
 
     constructor(container: HTMLElement) {

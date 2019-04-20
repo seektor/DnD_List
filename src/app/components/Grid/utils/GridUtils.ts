@@ -2,8 +2,26 @@ import { TGridMapData } from "../structures/TGridMapData";
 import { TGridDimensions } from "../structures/TGridDimensions";
 import { TCoords } from "../../../structures/TCoords";
 import { TGridItemPlacement } from "../structures/TGridItemPlacement";
+import { TGridParams } from "../structures/TGridParams";
 
 export class GridUtils {
+
+    public static setGridTemplateColumns(gridElement: HTMLElement, gridParentElement: HTMLElement, gridParams: TGridParams): void {
+        const columnWidth: number = this.calculateColumnWidth(gridParentElement, gridParams);
+        gridElement.style.gridTemplateColumns = `repeat(${gridParams.columnCount}, ${columnWidth}px)`;
+    }
+
+    public static setGridGaps(gridElement: HTMLElement, rowGap: number, columnGap: number): void {
+        gridElement.style.rowGap = `${rowGap}px`;
+        gridElement.style.columnGap = `${columnGap}px`;
+    }
+
+    private static calculateColumnWidth(gridParentElement: HTMLElement, gridParams: TGridParams): number {
+        const parentStyles: CSSStyleDeclaration = window.getComputedStyle(gridParentElement);
+        const gridContentWidth: number = gridParentElement.clientWidth - parseFloat(parentStyles.paddingLeft) - parseFloat(parentStyles.paddingRight);
+        const calculatedColumnWidth: number = (gridContentWidth - ((gridParams.columnCount - 1) * gridParams.columnGap)) / gridParams.columnCount;
+        return Math.max(calculatedColumnWidth, gridParams.minColumnWidth || 0);
+    }
 
     public static createGridDataView(itemsList: HTMLElement[], columnCount: number, emptyMarker: number, rowspanExtractor: (item: HTMLElement) => number, colspanExtractor: (item: HTMLElement) => number): TGridMapData {
         const gridMap: Int16Array[] = [];

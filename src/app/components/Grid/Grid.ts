@@ -1,5 +1,5 @@
 import { Utils } from "../../utils/Utils";
-import { TGrid } from "./structures/TGrid";
+import { TGridParams } from "./structures/TGridParams";
 import GridAttributeHooks from "./structures/GridAttributeHooks";
 import { TGridItemProperties } from "./structures/TGridItemProperties";
 import { TDragStartData } from "../List/structures/TDragStartData";
@@ -19,6 +19,7 @@ import { TTranslations } from "../../structures/TTranslations";
 import { TCoords } from "../../structures/TCoords";
 import { autoScroll } from "../../utils/auto-scroll/autoScroll";
 import { Orientation } from "../../structures/Orientation";
+import ResizeService from "../../services/resizeService/ResizeService";
 
 export class Grid {
 
@@ -28,12 +29,11 @@ export class Grid {
     private pointerEventHandler: PointerEventHandler;
 
     private readonly emptyMarker: number = -1;
-    private gridParams: TGrid;
+    private gridParams: TGridParams;
 
     private dragState: TGridDragState | null = null;
-    private isDragging: boolean = false;
 
-    constructor(container: HTMLElement, params: TGrid) {
+    constructor(container: HTMLElement, params: TGridParams) {
         this.gridParams = params;
         this.pointerEventHandler = new PointerEventHandler();
         this.bindMethods();
@@ -42,6 +42,7 @@ export class Grid {
 
     public dispose(): void {
         this.pointerEventHandler.flushAll();
+        ResizeService.unsubscribe(this.scrollableContainer);
     }
 
     private bindMethods(): void {
@@ -51,19 +52,20 @@ export class Grid {
         this.onDragEnd = this.onDragEnd.bind(this);
     }
 
-    private constructComponent(container: HTMLElement, params: TGrid): void {
+    private constructComponent(container: HTMLElement, params: TGridParams): void {
         const gridTemplate: string = require("./grid.tpl.html");
         const gridElement: HTMLElement = Utils.createElementFromTemplate(gridTemplate);
-        const contStles = window.getComputedStyle(container);
-        const wif = container.clientWidth - parseFloat(contStles.paddingLeft) - parseFloat(contStles.paddingRight);
-        const colWidth: number = (wif - (params.columnCount - 1) * params.columnGap) / params.columnCount;
-        gridElement.style.gridTemplateColumns = `repeat(${params.columnCount}, ${100}px)`;
-        gridElement.style.columnGap = `${params.columnGap}px`;
-        gridElement.style.rowGap = `${params.rowGap}px`;
+        GridUtils.setGridTemplateColumns(gridElement, container, params);
+        GridUtils.setGridGaps(gridElement, params.rowGap, params.columnGap);
         this.gridElement = gridElement;
         container.append(gridElement);
         this.placeholderElement = this.createPlaceholderElement();
         this.scrollableContainer = container;
+        if (params.watchAnyResize) {
+            ResizeService.subscribeToAny(this.scrollableContainer, () => GridUtils.setGridTemplateColumns(gridElement, container, params));
+        } else {
+            ResizeService.subscribeToWindow(container, () => GridUtils.setGridTemplateColumns(gridElement, container, params));
+        }
     }
 
     private createPlaceholderElement(): HTMLElement {
@@ -180,7 +182,6 @@ export class Grid {
         this.setDraggedElementStyles(draggedElement);
         this.dragState.draggedElement.after(this.placeholderElement);
         this.detachElement(this.dragState.draggedElement);
-        this.isDragging = true;
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionMove, this.onDragMove);
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
 
@@ -372,7 +373,6 @@ export class Grid {
     private onDragEnd(event: SyntheticEvent): void {
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onDragMove);
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
-        this.isDragging = false;
         const placeholderPosition = this.dragState.gridView.gridMapData.itemPlacements.get(this.placeholderElement);
         const placeholderTranslation = this.dragState.gridView.itemTranslations.get(this.placeholderElement);
         console.log(placeholderPosition);
