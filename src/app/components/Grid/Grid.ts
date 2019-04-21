@@ -218,6 +218,7 @@ export class Grid {
             const currentGridMapData: TGridMapData = this.createGridMapData(currentItemList, this.gridParams.columnCount);
             const currentGridDimensions: TGridDimensions = GridUtils.calculateGridDimensions(this.gridElement, currentGridMapData.gridMap, this.gridParams.columnCount, this.gridParams.rowGap, this.gridParams.columnGap, this.dragState.gridView.gridDimensions);
             const currentItemTranslations = this.createAnimations(this.dragState.gridView, currentItemList, currentGridMapData, currentGridDimensions);
+            GridUtils.calculateForbiddenTrigger(currentGridMapData.gridMap, gridClientX, gridCoords, currentItemList, currentItemTranslations);
             this.dragState.gridView = {
                 itemsList: currentItemList,
                 gridDimensions: currentGridDimensions,
