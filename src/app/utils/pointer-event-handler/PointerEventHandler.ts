@@ -94,7 +94,10 @@ export class PointerEventHandler {
             eventsMapCallbacks.splice(eventsMapCallbacks.indexOf(callbacks, 1));
         });
         if (eventsMapCallbacks.length === 0) {
-            this.subscribersMap.delete(element);
+            delete eventsMap[type];
+            if (Object.keys(eventsMap).length === 0) {
+                this.subscribersMap.delete(element);
+            }
         }
     }
 

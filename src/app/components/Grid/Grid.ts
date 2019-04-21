@@ -176,54 +176,10 @@ export class Grid {
         dragItemsList.splice(draggedElementIndex, 1, this.placeholderElement);
         this.dragState = this.createInitialDragState(event, dragItemsList, draggedElement);
         this.setDraggedElementStyles(draggedElement);
-        this.dragState.draggedElement.after(this.placeholderElement);
-        this.detachElement(this.dragState.draggedElement);
+        this.detachDraggedElement(this.dragState.draggedElement, this.placeholderElement);
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionMove, this.onDragMove);
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
-
-
-
-        const scrollableContainerRect: ClientRect = this.scrollableContainer.getBoundingClientRect();
-        const scX0: number = scrollableContainerRect.left;
-        const scX1: number = scrollableContainerRect.left + scrollableContainerRect.width;
-        const scY0: number = scrollableContainerRect.top;
-        const scY1: number = scrollableContainerRect.top + scrollableContainerRect.height;
-        const horizontalScrollTriggerWidthPerSide: number = scrollableContainerRect.width * 0.10;
-        const verticalScrollTriggerWidthPerSide: number = scrollableContainerRect.height * 0.10;
-
-        // scroll a nie client?event
-        // this.pointerEventHandler.addEventListener(document, PointerEventType.ActionMove, (e => {
-        //     const gridX: number = e.clientX - scX0;
-        //     const gridY: number = e.clientY - scY0;
-        //     const incrementReducer: number = 0.1;
-        //     let horizontalIncrement: number | null = null;
-        //     if (this.isBetween(gridX, 0, horizontalScrollTriggerWidthPerSide)) {
-        //         horizontalIncrement = -(horizontalScrollTriggerWidthPerSide - gridX) * incrementReducer;
-        //     } else if (this.isBetween(gridX, this.scrollableContainer.clientWidth - horizontalScrollTriggerWidthPerSide, this.scrollableContainer.clientWidth)) {
-        //         horizontalIncrement = (horizontalScrollTriggerWidthPerSide - (this.scrollableContainer.clientWidth - gridX)) * incrementReducer;
-        //     }
-
-        //     let verticalIncrement: number | null = null;
-        //     if (this.isBetween(gridY, 0, verticalScrollTriggerWidthPerSide)) {
-        //         verticalIncrement = -(verticalScrollTriggerWidthPerSide - gridY) * incrementReducer;
-        //     } else if (this.isBetween(gridY, this.scrollableContainer.clientHeight - verticalScrollTriggerWidthPerSide, this.scrollableContainer.clientHeight)) {
-        //         verticalIncrement = (verticalScrollTriggerWidthPerSide - (this.scrollableContainer.clientHeight - gridY)) * incrementReducer;
-        //     }
-
-        //     const shouldScroll: boolean = horizontalIncrement !== null || verticalIncrement !== null;
-
-        //     if (shouldScroll) {
-        //         if (this.dragState.containerScrollCallbacks) {
-        //             this.dragState.containerScrollCallbacks.setIncrement(Orientation.Horizontal, horizontalIncrement || 0);
-        //             this.dragState.containerScrollCallbacks.setIncrement(Orientation.Vertical, verticalIncrement || 0);
-        //         } else {
-        //             this.dragState.containerScrollCallbacks = autoScroll(this.scrollableContainer, horizontalIncrement, verticalIncrement);
-        //         }
-        //     } else if (this.dragState.containerScrollCallbacks) {
-        //         this.dragState.containerScrollCallbacks.cancel();
-        //         this.dragState.containerScrollCallbacks = null;
-        //     }
-        // }));
+        this.onDragMove(event);
     }
 
     private isBetween(value: number, min: number, max: number, inclusive?: boolean): boolean {
@@ -239,17 +195,16 @@ export class Grid {
         }
         const gridClientX: number = this.scrollableContainer.scrollLeft + event.clientX - this.dragState.initialDragViewportParams.initialComponentLeft;
         const gridClientY: number = this.scrollableContainer.scrollTop + event.clientY - this.dragState.initialDragViewportParams.initialComponentTop;
-        const gridCoords: TCoords = GridUtils.getGridCoordsFromPointer(gridClientX, gridClientY, this.dragState.gridView.gridDimensions);
+        const gridCoords: TCoords = GridUtils.calculateGridCoords(gridClientX, gridClientY, this.dragState.gridView.gridDimensions);
         const previousGridMap: Int16Array[] = this.dragState.gridView.gridMapData.gridMap;
 
 
 
 
 
-        const currentPlaceholderIndex: number = this.findNewPlaceholderIndex(previousGridMap, this.dragState.placeholderIndex, this.dragState.gridView.itemTranslations, gridCoords, gridClientX);
-        if (this.dragState.placeholderIndex !== currentPlaceholderIndex) {
-
-            const currentItemList: HTMLElement[] = this.getNewItemList(this.dragState.gridView.itemsList, this.dragState.placeholderIndex, currentPlaceholderIndex);
+        const currentPlaceholderPosition: number = this.findNewPlaceholderPosition(previousGridMap, this.dragState.placeholderIndex, this.dragState.gridView.itemTranslations, gridCoords, gridClientX);
+        if (this.dragState.placeholderIndex !== currentPlaceholderPosition) {
+            const currentItemList: HTMLElement[] = this.getNewItemList(this.dragState.gridView.itemsList, this.dragState.placeholderIndex, currentPlaceholderPosition);
             const currentGridMapData: TGridMapData = this.createGridMapData(currentItemList, this.gridParams.columnCount);
             const currentGridDimensions: TGridDimensions = GridUtils.calculateGridDimensions(this.gridElement, currentGridMapData.gridMap, this.gridParams.columnCount, this.gridParams.rowGap, this.gridParams.columnGap, this.dragState.gridView.gridDimensions);
             const currentItemTranslations = this.createAnimations(this.dragState.gridView, currentItemList, currentGridMapData, currentGridDimensions);
@@ -259,19 +214,14 @@ export class Grid {
                 gridMapData: currentGridMapData,
                 itemTranslations: currentItemTranslations
             }
-            this.dragState.placeholderIndex = currentPlaceholderIndex;
+            this.dragState.placeholderIndex = currentPlaceholderPosition;
         }
 
-        const scrollableContainerRect: ClientRect = this.scrollableContainer.getBoundingClientRect();
-        const scX0: number = scrollableContainerRect.left;
-        const scX1: number = scrollableContainerRect.left + scrollableContainerRect.width;
-        const scY0: number = scrollableContainerRect.top;
-        const scY1: number = scrollableContainerRect.top + scrollableContainerRect.height;
-        const horizontalScrollTriggerWidthPerSide: number = scrollableContainerRect.width * 0.10;
-        const verticalScrollTriggerWidthPerSide: number = scrollableContainerRect.height * 0.10;
+        const horizontalScrollTriggerWidthPerSide: number = this.scrollableContainer.clientWidth * 0.10;
+        const verticalScrollTriggerWidthPerSide: number = this.scrollableContainer.clientHeight * 0.10;
 
-        const gridX: number = event.clientX - scX0;
-        const gridY: number = event.clientY - scY0;
+        const gridX: number = event.clientX - this.dragState.initialDragViewportParams.initialComponentLeft;
+        const gridY: number = event.clientY - this.dragState.initialDragViewportParams.initialComponentTop;
         const incrementReducer: number = 0.1;
         let horizontalIncrement: number | null = null;
         if (this.isBetween(gridX, 0, horizontalScrollTriggerWidthPerSide)) {
@@ -331,7 +281,6 @@ export class Grid {
         this.dragState.isTranslating = true;
         smoothTranslate(translations, 200, () => {
             this.dragState.isTranslating = false;
-            console.warn("DONE");
         });
         return currentItemTranslations;
     }
@@ -342,28 +291,29 @@ export class Grid {
         return newItemList;
     }
 
-    private findNewPlaceholderIndex(gridMap: Int16Array[], previousPlaceholderIndex: number, previousItemTranslations: WeakMap<HTMLElement, TTranslations>, gridCoordinates: TCoords, gridClientX: number): number {
-        let placeholderIndex: number;
-        const itemMarker: number = gridMap[gridCoordinates.y][gridCoordinates.x];
-        if (itemMarker === this.emptyMarker) {
-            const markerToTheLeft: number | null = GridUtils.findFirstNonEmptyValueFromFlowLeft(gridMap, gridCoordinates, this.emptyMarker);
-            placeholderIndex = markerToTheLeft === null ? 0 : markerToTheLeft;
+    private findNewPlaceholderPosition(gridMap: Int16Array[], currentPlaceholderIndex: number, itemTranslations: WeakMap<HTMLElement, TTranslations>, gridCoords: TCoords, gridClientX: number): number {
+        let newPlaceholderPosition: number;
+        const currentItemMarker: number = gridMap[gridCoords.y][gridCoords.x];
+        if (currentItemMarker === this.emptyMarker) {
+            const gridCoordsToTheLeft: TCoords = { x: gridCoords.x - 1, y: gridCoords.y };
+            const itemMarkerToTheLeft: number | null = GridUtils.findFirstItemMarkerUsingLeftFlow(gridMap, gridCoordsToTheLeft, this.emptyMarker);
+            newPlaceholderPosition = itemMarkerToTheLeft === null ? 0 : (currentPlaceholderIndex >= itemMarkerToTheLeft ? itemMarkerToTheLeft + 1 : itemMarkerToTheLeft);
         } else {
-            const item: HTMLElement = this.dragState.gridView.itemsList[itemMarker];
+            const item: HTMLElement = this.dragState.gridView.itemsList[currentItemMarker];
             if (item === this.placeholderElement) {
-                placeholderIndex = this.dragState.placeholderIndex;
+                newPlaceholderPosition = currentItemMarker;
             } else {
-                const itemTranslations: TTranslations = previousItemTranslations.get(item);
-                const itemCenterX: number = item.offsetLeft + (item.offsetWidth * 0.5) + itemTranslations.translateX;
+                const currentItemTranslations: TTranslations = itemTranslations.get(item);
+                const itemCenterX: number = item.offsetLeft + (item.offsetWidth * 0.5) + currentItemTranslations.translateX;
                 const itemSide: Direction = gridClientX < itemCenterX ? Direction.Left : Direction.Right;
                 if (itemSide === Direction.Left) {
-                    placeholderIndex = previousPlaceholderIndex > itemMarker ? itemMarker : Math.max(0, itemMarker - 1);
+                    newPlaceholderPosition = currentPlaceholderIndex > currentItemMarker ? currentItemMarker : Math.max(0, currentItemMarker - 1);
                 } else {
-                    placeholderIndex = previousPlaceholderIndex > itemMarker ? itemMarker + 1 : itemMarker;
+                    newPlaceholderPosition = currentPlaceholderIndex > currentItemMarker ? currentItemMarker + 1 : currentItemMarker;
                 }
             }
         }
-        return placeholderIndex;
+        return newPlaceholderPosition;
     }
 
     private onDragEnd(event: SyntheticEvent): void {
@@ -371,7 +321,6 @@ export class Grid {
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
         const placeholderPosition = this.dragState.gridView.gridMapData.itemPlacements.get(this.placeholderElement);
         const placeholderTranslation = this.dragState.gridView.itemTranslations.get(this.placeholderElement);
-        console.log(placeholderPosition);
         var style = window.getComputedStyle(this.dragState.draggedElement);
         var matrix = new WebKitCSSMatrix(style.webkitTransform);
         smoothTranslate([{
@@ -382,17 +331,17 @@ export class Grid {
             toY: placeholderTranslation.translateY
         }], 1000, () => {
             this.gridElement.removeChild(this.placeholderElement);
+            this.removePlaceholderStyles();
             const from: number = this.dragState.originalDragItemsList.indexOf(this.placeholderElement);
             const to: number = this.dragState.placeholderIndex;
-            console.log("SWITCH TAJM", from, to);
             [...this.gridElement.children].forEach(c => this.removeTranslation(c as HTMLHtmlElement));
             const beforeIndex: number = from < to ? to + 1 : to;
             const child: Node = this.gridElement.children.item(from);
             const toNode: Node = this.gridElement.children.item(beforeIndex);
             this.gridElement.insertBefore(child, toNode);
+            this.removeDraggedElementStyles();
             this.dragState.draggedElement.style.position = '';
         });
-        // this.removeTranslation(this.dragState.draggedElement);
     }
 
     private setTranslation(element: HTMLElement, x: number, y: number): void {
@@ -412,19 +361,38 @@ export class Grid {
         this.placeholderElement.style.gridColumnStart = `span ${itemProperties.colspan}`;
     }
 
+    private removePlaceholderStyles(): void {
+        this.placeholderElement.setAttribute(GridAttributeHooks.rowspan, "");
+        this.placeholderElement.setAttribute(GridAttributeHooks.colspan, "");
+        this.placeholderElement.style.width = ``;
+        this.placeholderElement.style.height = ``;
+        this.placeholderElement.style.gridRowStart = ``;
+        this.placeholderElement.style.gridColumnStart = ``;
+        this.removeTranslation(this.placeholderElement);
+    }
+
     private setDraggedElementStyles(mirrorGridItem: HTMLElement): void {
-        const mirrorElementClientRect: ClientRect = mirrorGridItem.getBoundingClientRect();
-        this.dragState.draggedElement.style.top = `${mirrorElementClientRect.top}px`;
-        this.dragState.draggedElement.style.left = `${mirrorElementClientRect.left}px`;
+        const mirrorItemClientRect: ClientRect = mirrorGridItem.getBoundingClientRect();
+        this.dragState.draggedElement.style.top = `${mirrorItemClientRect.top}px`;
+        this.dragState.draggedElement.style.left = `${mirrorItemClientRect.left}px`;
         this.dragState.draggedElement.style.width = `${this.dragState.draggedElement.offsetWidth}px`;
         this.dragState.draggedElement.style.height = `${this.dragState.draggedElement.offsetHeight}px`;
         this.dragState.draggedElement.style.zIndex = "1";
         this.dragState.draggedElement.style.pointerEvents = "none";
     }
 
-    private detachElement(element: HTMLElement): void {
+    private removeDraggedElementStyles(): void {
+        this.dragState.draggedElement.style.top = ``;
+        this.dragState.draggedElement.style.left = ``;
+        this.dragState.draggedElement.style.width = ``;
+        this.dragState.draggedElement.style.height = ``;
+        this.dragState.draggedElement.style.zIndex = ``;
+        this.dragState.draggedElement.style.pointerEvents = ``;
+    }
 
-        element.style.position = "fixed";
+    private detachDraggedElement(draggedElement: HTMLElement, placeholderElement: HTMLElement): void {
+        draggedElement.after(placeholderElement);
+        draggedElement.style.position = "fixed";
     }
 
     private getClosestGridItem(fromElement: HTMLElement): HTMLElement | null {

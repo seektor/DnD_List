@@ -52,14 +52,14 @@ export class GridUtils {
                     gridMap[currentRowInd] = GridUtils.createEmptyGridRow(columnCount, emptyMarker);
                 }
                 const currentRow: Int16Array = gridMap[currentRowInd];
-                const insertColIndex: number | null = this.getFirstFreeColumnIndex(currentRow, currentColInd, colspan, emptyMarker);
+                const insertColIndex: number | null = this.getFirstEmptyColumnIndex(currentRow, currentColInd, colspan, emptyMarker);
                 if (insertColIndex === null) {
                     currentRowInd += 1;
                     currentColInd = 0;
                     continue;
                 }
                 currentColInd = insertColIndex;
-                this.extendMapShape(gridMap, currentRowInd, currentRowInd + rowspan, columnCount, emptyMarker);
+                this.assertMapShape(gridMap, currentRowInd, currentRowInd + rowspan, columnCount, emptyMarker);
                 this.setItemInMap(gridMap, itemMarker, currentColInd, currentRowInd, rowspan, colspan);
                 itemPlacements.set(item, {
                     colspan,
@@ -84,20 +84,20 @@ export class GridUtils {
         return new Int16Array(colCount).fill(emptyMarker);
     }
 
-    private static getFirstFreeColumnIndex(row: Int16Array, startIndex: number, columnspan: number, emptyMarker: number): number | null {
-        let freeColumnIndex: number = null;
+    private static getFirstEmptyColumnIndex(row: Int16Array, startIndex: number, columnspan: number, emptyMarker: number): number | null {
+        let emptyColumnIndex: number = null;
         const maxAllowedColumnIndex: number = Math.min(row.length - columnspan, row.length - 1);
         for (let colInd: number = startIndex; colInd <= maxAllowedColumnIndex; colInd++) {
             const slice: Int16Array = row.slice(colInd, colInd + columnspan);
             if (slice.every(ind => ind === emptyMarker)) {
-                freeColumnIndex = colInd;
+                emptyColumnIndex = colInd;
                 break;
             }
         }
-        return freeColumnIndex;
+        return emptyColumnIndex;
     }
 
-    private static extendMapShape(map: Int16Array[], fromRowInd: number, toRowInd: number, columnCount: number, emptyMarker: number): void {
+    private static assertMapShape(map: Int16Array[], fromRowInd: number, toRowInd: number, columnCount: number, emptyMarker: number): void {
         for (let rowInd = fromRowInd; rowInd < toRowInd; rowInd++) {
             if (!map[rowInd]) {
                 map[rowInd] = GridUtils.createEmptyGridRow(columnCount, emptyMarker);
@@ -105,16 +105,16 @@ export class GridUtils {
         }
     }
 
-    private static setItemInMap(map: Int16Array[], marker: number, x: number, y: number, rowspan: number, colspan: number) {
+    private static setItemInMap(map: Int16Array[], marker: number, x: number, y: number, rowspan: number, colspan: number): void {
         for (let rowInd = y; rowInd < y + rowspan; rowInd++) {
             const dataRow: number[] = new Array(colspan).fill(marker);
             map[rowInd].set(dataRow, x);
         }
     }
 
+    // grid [arams]
     public static calculateGridDimensions(gridElement: HTMLElement, gridMap: Int16Array[], columnCount: number, rowGap: number, columnGap: number, previousGridDimensions?: TGridDimensions | null): TGridDimensions {
         const rowCount: number = gridMap.length;
-        console.log(previousGridDimensions);
         if (previousGridDimensions && previousGridDimensions.rowCount === rowCount) {
             return { ...previousGridDimensions };
         }
@@ -132,26 +132,24 @@ export class GridUtils {
         return { columnCount, columnGap, columnWidth, rowCount, rowGap, rowHeight };
     }
 
-    public static getGridCoordsFromPointer(gridClientX: number, gridClientY: number, gridDimensions: TGridDimensions): TCoords {
+    public static calculateGridCoords(gridClientX: number, gridClientY: number, gridDimensions: TGridDimensions): TCoords {
         let itemX: number = 0;
         let itemY: number = 0;
-        let widthSum: number = 0;
-        let heightSum: number = 0;
+        let widthSum: number = gridDimensions.columnWidth + 0.5 * gridDimensions.columnGap;
+        let heightSum: number = gridDimensions.rowHeight + 0.5 * gridDimensions.rowGap;
         for (let colInd: number = 0; colInd < gridDimensions.columnCount; colInd++) {
             itemX = colInd;
-            const gapStep: number = colInd === 0 ? 0.5 * gridDimensions.columnGap : gridDimensions.columnGap;
-            widthSum += gridDimensions.columnWidth + gapStep;
             if (widthSum >= gridClientX) {
                 break;
             }
+            widthSum += gridDimensions.columnWidth + gridDimensions.columnGap;
         }
         for (let rowInd: number = 0; rowInd < gridDimensions.rowCount; rowInd++) {
             itemY = rowInd;
-            const gapStep: number = rowInd === 0 ? 0.5 * gridDimensions.columnGap : gridDimensions.columnGap;
-            heightSum += gridDimensions.rowHeight + gapStep;
             if (heightSum >= gridClientY) {
                 break;
             }
+            heightSum += gridDimensions.rowHeight + gridDimensions.rowGap;
         }
         return {
             x: itemX,
@@ -159,21 +157,21 @@ export class GridUtils {
         }
     }
 
-    public static findFirstNonEmptyValueFromFlowLeft(gridMap: Int16Array[], fromCoords: TCoords, emptyMarker: number): number | null {
-        const colCount: number = gridMap[fromCoords.y].length;
-        let nonEmptyValue: number | null = null;
+    public static findFirstItemMarkerUsingLeftFlow(gridMap: Int16Array[], fromCoords: TCoords, emptyMarker: number): number | null {
+        const columnCount: number = gridMap[fromCoords.y].length;
+        let itemMarker: number | null = null;
+        let currentColumnIndex: number = fromCoords.x;
         scanner:
         for (let rowIndex = fromCoords.y; rowIndex >= 0; rowIndex--) {
-            let fromCol: number = fromCoords.x;
-            for (let columnIndex = fromCol; columnIndex >= 0; columnIndex--) {
+            for (let columnIndex = currentColumnIndex; columnIndex >= 0; columnIndex--) {
                 const currentValue: number = gridMap[rowIndex][columnIndex];
                 if (currentValue !== emptyMarker) {
-                    nonEmptyValue = currentValue;
+                    itemMarker = currentValue;
                     break scanner;
                 }
             }
-            fromCol = colCount;
+            currentColumnIndex = columnCount - 1;
         }
-        return nonEmptyValue;
+        return itemMarker;
     }
 }

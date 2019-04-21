@@ -25,11 +25,11 @@ export function smoothTranslate(translations: TTranslate[], duration: number, on
             const newTranslateY: number = translation.fromY + positionProgress * (translation.toY - translation.fromY);
             translation.element.style.transform = buildTranslationStyle(newTranslateX, newTranslateY);
         });
-
         if (timeProgress !== 1) {
             requestAnimationFrame(translate);
         } else {
             if (onEndCallback) {
+                console.log('cb');
                 requestAnimationFrame(() => onEndCallback());
             }
         }
