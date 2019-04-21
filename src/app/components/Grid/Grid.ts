@@ -116,7 +116,7 @@ export class Grid {
         if (!dragAnchor) {
             throw new Error('Provided element has no dragAnchor attribute!');
         }
-        this.pointerEventHandler.addEventListener(dragAnchor, PointerEventType.ActionStart, this.onDragStart);
+        this.pointerEventHandler.addEventListener(dragAnchor, PointerEventType.ActionStart, this.onActionStart);
         return wrapper;
     }
 
@@ -129,19 +129,28 @@ export class Grid {
             (item) => parseFloat(item.getAttribute(GridAttributeHooks.colspan)))
     }
 
-    private getInitialDragViewportParams(event: SyntheticEvent): TInitialDragViewportParams {
-        const gridClientRect: ClientRect = this.scrollableContainer.getBoundingClientRect();
+    private calculateInitialDragViewportParams(event: SyntheticEvent): TInitialDragViewportParams {
+        const scrollableContainerClientRect: ClientRect = this.scrollableContainer.getBoundingClientRect();
+        const gridElementClientRect: ClientRect = this.gridElement.getBoundingClientRect();
+        const windowWidth: number = window.innerWidth || document.body.clientWidth;
+        const windowHeight: number = window.innerHeight || document.body.clientHeight;
+        const gridContainerVisibleWidth: number = windowWidth - gridElementClientRect.left;
+        const gridContainerVisibleHeight: number = windowHeight - gridElementClientRect.top;
         return {
             initialCoordinates: { x: event.clientX, y: event.clientY },
-            initialComponentScrollTop: this.scrollableContainer.scrollTop,
-            initialComponentTop: gridClientRect.top,
-            initialComponentLeft: gridClientRect.left,
-            initialComponentScrollLeft: this.scrollableContainer.scrollLeft
+            initialComponentScrollTop: this.gridElement.scrollTop,
+            initialComponentTop: scrollableContainerClientRect.top,
+            initialComponentLeft: scrollableContainerClientRect.left,
+            initialComponentScrollLeft: this.gridElement.scrollLeft,
+            initialGridElementLeft: gridElementClientRect.left,
+            initialGridElementTop: gridElementClientRect.top,
+            horizontalScrollTriggerWidth: gridContainerVisibleWidth * 0.1,
+            verticalScrollTriggerHeight: gridContainerVisibleHeight * 0.1
         }
     }
 
     private createInitialDragState(event: SyntheticEvent, itemsList: HTMLElement[], draggedElement: HTMLElement): TGridDragState {
-        const initialDragViewportParams: TInitialDragViewportParams = this.getInitialDragViewportParams(event);
+        const initialDragViewportParams: TInitialDragViewportParams = this.calculateInitialDragViewportParams(event);
         const gridMapData: TGridMapData = this.createGridMapData(itemsList, this.gridParams.columnCount);
         const placeholderIndex: number = itemsList.indexOf(this.placeholderElement);
         const gridDimensions: TGridDimensions = GridUtils.calculateGridDimensions(this.gridElement, gridMapData.gridMap, this.gridParams.columnCount, this.gridParams.rowGap, this.gridParams.columnGap, null);
@@ -168,7 +177,7 @@ export class Grid {
 
     private onDragStart(event: SyntheticEvent): void {
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onDragStart);
-        const clickedElement: HTMLElement = event.currentTarget as HTMLElement;
+        const clickedElement: HTMLElement = event.target as HTMLElement;
         const draggedElement: HTMLElement = this.getClosestGridItem(clickedElement);
         this.setPlaceholderStyles(draggedElement);
         const dragItemsList: HTMLElement[] = [...this.gridElement.children] as HTMLElement[];
@@ -193,8 +202,8 @@ export class Grid {
         if (this.dragState.isTranslating) {
             return;
         }
-        const gridClientX: number = this.scrollableContainer.scrollLeft + event.clientX - this.dragState.initialDragViewportParams.initialComponentLeft;
-        const gridClientY: number = this.scrollableContainer.scrollTop + event.clientY - this.dragState.initialDragViewportParams.initialComponentTop;
+        const gridClientX: number = this.scrollableContainer.scrollLeft + event.clientX - this.dragState.initialDragViewportParams.initialGridElementLeft;
+        const gridClientY: number = this.scrollableContainer.scrollTop + event.clientY - this.dragState.initialDragViewportParams.initialGridElementTop;
         const gridCoords: TCoords = GridUtils.calculateGridCoords(gridClientX, gridClientY, this.dragState.gridView.gridDimensions);
         const previousGridMap: Int16Array[] = this.dragState.gridView.gridMapData.gridMap;
 
@@ -202,9 +211,10 @@ export class Grid {
 
 
 
-        const currentPlaceholderPosition: number = this.findNewPlaceholderPosition(previousGridMap, this.dragState.placeholderIndex, this.dragState.gridView.itemTranslations, gridCoords, gridClientX);
-        if (this.dragState.placeholderIndex !== currentPlaceholderPosition) {
-            const currentItemList: HTMLElement[] = this.getNewItemList(this.dragState.gridView.itemsList, this.dragState.placeholderIndex, currentPlaceholderPosition);
+        const newPlaceholderPosition: number = this.findNewPlaceholderPosition(previousGridMap, this.dragState.gridView.itemTranslations, gridCoords, gridClientX);
+        if (this.dragState.placeholderIndex !== newPlaceholderPosition) {
+            const sledge = this.dragState.placeholderIndex < newPlaceholderPosition ? Math.max(0, newPlaceholderPosition - 1) : newPlaceholderPosition;
+            const currentItemList: HTMLElement[] = this.getNewItemList(this.dragState.gridView.itemsList, this.dragState.placeholderIndex, sledge);
             const currentGridMapData: TGridMapData = this.createGridMapData(currentItemList, this.gridParams.columnCount);
             const currentGridDimensions: TGridDimensions = GridUtils.calculateGridDimensions(this.gridElement, currentGridMapData.gridMap, this.gridParams.columnCount, this.gridParams.rowGap, this.gridParams.columnGap, this.dragState.gridView.gridDimensions);
             const currentItemTranslations = this.createAnimations(this.dragState.gridView, currentItemList, currentGridMapData, currentGridDimensions);
@@ -214,27 +224,26 @@ export class Grid {
                 gridMapData: currentGridMapData,
                 itemTranslations: currentItemTranslations
             }
-            this.dragState.placeholderIndex = currentPlaceholderPosition;
+            this.dragState.placeholderIndex = sledge;
         }
 
-        const horizontalScrollTriggerWidthPerSide: number = this.scrollableContainer.clientWidth * 0.10;
-        const verticalScrollTriggerWidthPerSide: number = this.scrollableContainer.clientHeight * 0.10;
+        const { horizontalScrollTriggerWidth, verticalScrollTriggerHeight } = this.dragState.initialDragViewportParams;
 
         const gridX: number = event.clientX - this.dragState.initialDragViewportParams.initialComponentLeft;
         const gridY: number = event.clientY - this.dragState.initialDragViewportParams.initialComponentTop;
         const incrementReducer: number = 0.1;
         let horizontalIncrement: number | null = null;
-        if (this.isBetween(gridX, 0, horizontalScrollTriggerWidthPerSide)) {
-            horizontalIncrement = -(horizontalScrollTriggerWidthPerSide - gridX) * incrementReducer;
-        } else if (this.isBetween(gridX, this.scrollableContainer.clientWidth - horizontalScrollTriggerWidthPerSide, this.scrollableContainer.clientWidth)) {
-            horizontalIncrement = (horizontalScrollTriggerWidthPerSide - (this.scrollableContainer.clientWidth - gridX)) * incrementReducer;
+        if (this.isBetween(gridX, 0, horizontalScrollTriggerWidth)) {
+            horizontalIncrement = -(horizontalScrollTriggerWidth - gridX) * incrementReducer;
+        } else if (this.isBetween(gridX, this.scrollableContainer.clientWidth - horizontalScrollTriggerWidth, this.scrollableContainer.clientWidth)) {
+            horizontalIncrement = (horizontalScrollTriggerWidth - (this.scrollableContainer.clientWidth - gridX)) * incrementReducer;
         }
 
         let verticalIncrement: number | null = null;
-        if (this.isBetween(gridY, 0, verticalScrollTriggerWidthPerSide)) {
-            verticalIncrement = -(verticalScrollTriggerWidthPerSide - gridY) * incrementReducer;
-        } else if (this.isBetween(gridY, this.scrollableContainer.clientHeight - verticalScrollTriggerWidthPerSide, this.scrollableContainer.clientHeight)) {
-            verticalIncrement = (verticalScrollTriggerWidthPerSide - (this.scrollableContainer.clientHeight - gridY)) * incrementReducer;
+        if (this.isBetween(gridY, 0, verticalScrollTriggerHeight)) {
+            verticalIncrement = -(verticalScrollTriggerHeight - gridY) * incrementReducer;
+        } else if (this.isBetween(gridY, this.scrollableContainer.clientHeight - verticalScrollTriggerHeight, this.scrollableContainer.clientHeight)) {
+            verticalIncrement = (verticalScrollTriggerHeight - (this.scrollableContainer.clientHeight - gridY)) * incrementReducer;
         }
 
         const shouldScroll: boolean = horizontalIncrement !== null || verticalIncrement !== null;
@@ -291,13 +300,13 @@ export class Grid {
         return newItemList;
     }
 
-    private findNewPlaceholderPosition(gridMap: Int16Array[], currentPlaceholderIndex: number, itemTranslations: WeakMap<HTMLElement, TTranslations>, gridCoords: TCoords, gridClientX: number): number {
+    private findNewPlaceholderPosition(gridMap: Int16Array[], itemTranslations: WeakMap<HTMLElement, TTranslations>, gridCoords: TCoords, gridClientX: number): number {
         let newPlaceholderPosition: number;
         const currentItemMarker: number = gridMap[gridCoords.y][gridCoords.x];
         if (currentItemMarker === this.emptyMarker) {
             const gridCoordsToTheLeft: TCoords = { x: gridCoords.x - 1, y: gridCoords.y };
             const itemMarkerToTheLeft: number | null = GridUtils.findFirstItemMarkerUsingLeftFlow(gridMap, gridCoordsToTheLeft, this.emptyMarker);
-            newPlaceholderPosition = itemMarkerToTheLeft === null ? 0 : (currentPlaceholderIndex >= itemMarkerToTheLeft ? itemMarkerToTheLeft + 1 : itemMarkerToTheLeft);
+            newPlaceholderPosition = itemMarkerToTheLeft === null ? 0 : itemMarkerToTheLeft + 1;
         } else {
             const item: HTMLElement = this.dragState.gridView.itemsList[currentItemMarker];
             if (item === this.placeholderElement) {
@@ -307,9 +316,9 @@ export class Grid {
                 const itemCenterX: number = item.offsetLeft + (item.offsetWidth * 0.5) + currentItemTranslations.translateX;
                 const itemSide: Direction = gridClientX < itemCenterX ? Direction.Left : Direction.Right;
                 if (itemSide === Direction.Left) {
-                    newPlaceholderPosition = currentPlaceholderIndex > currentItemMarker ? currentItemMarker : Math.max(0, currentItemMarker - 1);
+                    newPlaceholderPosition = currentItemMarker;
                 } else {
-                    newPlaceholderPosition = currentPlaceholderIndex > currentItemMarker ? currentItemMarker + 1 : currentItemMarker;
+                    newPlaceholderPosition = currentItemMarker + 1;
                 }
             }
         }
@@ -319,6 +328,7 @@ export class Grid {
     private onDragEnd(event: SyntheticEvent): void {
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onDragMove);
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
+        this.dragState.containerScrollCallbacks && this.dragState.containerScrollCallbacks.cancel();
         const placeholderPosition = this.dragState.gridView.gridMapData.itemPlacements.get(this.placeholderElement);
         const placeholderTranslation = this.dragState.gridView.itemTranslations.get(this.placeholderElement);
         var style = window.getComputedStyle(this.dragState.draggedElement);
