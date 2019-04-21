@@ -1,7 +1,7 @@
 .header {
     $height: 60px;
     display: flex;
-    background-color: #152658;
+    background-color: $primary--dark;
     color: white;
     height: $height;
     line-height: $height;

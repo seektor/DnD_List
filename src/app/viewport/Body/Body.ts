@@ -1,6 +1,6 @@
 import { Utils } from "../../utils/Utils";
-import { ListDemo } from "../../demos/ListDemo/ListDemo";
-import { GridDemo } from "../../demos/GridDemo/GridDemo";
+import { GridDemo } from "../../demos/gridDemos/GridDemo/GridDemo";
+import { GridWithToolboxDemo } from "../../demos/gridDemos/GridWithToolboxDemo/GridWithToolboxDemo";
 
 export class Body {
 
@@ -9,7 +9,8 @@ export class Body {
     constructor(container: HTMLElement) {
         this.constructComponent(container);
         // const listDemo = new ListDemo(this.bodyElement);
-        const gridDemo = new GridDemo(this.bodyElement);
+        // const gridDemo = new GridDemo(this.bodyElement);
+        const gridWithToolboxDemo = new GridWithToolboxDemo(this.bodyElement);
     }
 
     private constructComponent(container: HTMLElement): void {

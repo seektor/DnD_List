@@ -1,0 +1,17 @@
+.toolbox-item {
+    cursor: grab;
+    text-transform: uppercase;
+    height: 35px;
+    width: 90%;
+    margin: auto;
+    font-size: 14px;
+    line-height: 35px;
+    text-align: center;
+    font-weight: bold;
+    border-radius: 2px;
+    color: $primary--light;
+    border: 2px solid $primary--light;
+    background-color: white;
+    margin-bottom: 8px;
+    user-select: none;
+}
