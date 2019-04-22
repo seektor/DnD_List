@@ -221,25 +221,25 @@ export class GridCalculator {
     }
 
     public calculateGridPositionCoords(gridClientX: number, gridClientY: number, gridDimensions: TGridDimensions): TCoords {
-        let itemX: number = 0;
-        let itemY: number = 0;
+        let gridX: number = 0;
+        let gridY: number = 0;
         let widthSum: number = gridDimensions.columnWidth + 0.5 * gridDimensions.columnGap;
         let heightSum: number = gridDimensions.rowHeight + 0.5 * gridDimensions.rowGap;
         for (let colInd: number = 0; colInd < gridDimensions.columnCount; colInd++) {
-            itemX = colInd;
+            gridX = colInd;
             if (widthSum >= gridClientX) {
                 break;
             }
             widthSum += gridDimensions.columnWidth + gridDimensions.columnGap;
         }
         for (let rowInd: number = 0; rowInd < gridDimensions.rowCount; rowInd++) {
-            itemY = rowInd;
+            gridY = rowInd;
             if (heightSum >= gridClientY) {
                 break;
             }
             heightSum += gridDimensions.rowHeight + gridDimensions.rowGap;
         }
-        return { x: itemX, y: itemY }
+        return { x: gridX, y: gridY }
     }
 
     public calculateInitialDragViewportParams(clientX: number, clientY: number): TDragViewportParams {
@@ -271,9 +271,9 @@ export class GridCalculator {
         }
     }
 
-    public getGridClientCoords(clientX: number, clientY: number, initialGridLeft: number, initialGridTop: number): TCoords {
-        const gridClientX: number = this.gridScrollableElement.scrollLeft + clientX - initialGridLeft;
-        const gridClientY: number = this.gridScrollableElement.scrollTop + clientY - initialGridTop;
+    public getGridClientCoords(clientX: number, clientY: number, initialScrollableLeft: number, initialScrollableTop: number): TCoords {
+        const gridClientX: number = this.gridScrollableElement.scrollLeft + clientX - initialScrollableLeft;
+        const gridClientY: number = this.gridScrollableElement.scrollTop + clientY - initialScrollableTop;
         return { x: gridClientX, y: gridClientY };
     }
 

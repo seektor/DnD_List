@@ -1,4 +1,3 @@
-import { Orientation } from "../../structures/Orientation";
 import { IAutoScrollCallbacks } from "./interfaces/IAutoScrollCallbacks";
 
 export function autoScroll(container: HTMLElement, horizontalIncrement: number, verticalIncrement: number, onIncrementCallback?: () => void): IAutoScrollCallbacks {
@@ -14,19 +13,21 @@ export function autoScroll(container: HTMLElement, horizontalIncrement: number, 
         setIncrement: setIncrement,
     };
 
-    function setIncrement(orientation: Orientation, value: number) {
-        if (orientation === Orientation.Horizontal) {
-            currentHorizontalIncrement = value;
-        } else {
-            currentVerticalIncrement = value;
+    function setIncrement(horizontalIncrement: number, verticalIncrement: number): void {
+        currentHorizontalIncrement = horizontalIncrement;
+        currentVerticalIncrement = verticalIncrement;
+        if ((horizontalIncrement !== 0 || verticalIncrement !== 0) && isCancelled) {
+            isCancelled = false;
+            requestAnimationFrame(scroll);
         }
     }
 
     function scroll(now: DOMHighResTimeStamp): void {
-        let isScrolledHorizontally: boolean = horizontalIncrement > 0 ? container.scrollLeft + container.clientWidth >= container.scrollWidth : container.scrollLeft === 0;
-        let isScrolledVertically: boolean = verticalIncrement > 0 ? container.scrollTop + container.clientHeight >= container.scrollHeight : container.scrollTop === 0;
+        let isScrolledHorizontally: boolean = currentHorizontalIncrement > 0 ? container.scrollLeft + container.clientWidth >= container.scrollWidth : container.scrollLeft === 0;
+        let isScrolledVertically: boolean = currentVerticalIncrement > 0 ? container.scrollTop + container.clientHeight >= container.scrollHeight : container.scrollTop === 0;
         const canScroll: boolean = !isScrolledHorizontally || !isScrolledVertically;
         if (!canScroll || isCancelled) {
+            isCancelled = true;
             return;
         }
         const canRun: boolean = now - timeReference >= throttleTime;

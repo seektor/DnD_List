@@ -9,7 +9,7 @@ export class AbstractGridDemo {
         const item: HTMLElement = ItemFactory.ItemWithText(text, gradientColors[0], gradientColors[1]);
         const itemHeader: HTMLElement = Utils.getElementByAttribute(item, ItemFactoryAttributeHooks.header);
         itemHeader.setAttribute(GridAttributeHooks.itemDragAnchor, '');
-        itemHeader.style.cursor = 'pointer';
+        itemHeader.style.cursor = 'grab';
         return item;
     }
 
