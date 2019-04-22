@@ -51,6 +51,7 @@ export class Grid {
 
     private bindMethods(): void {
         this.onActionStart = this.onActionStart.bind(this);
+        this.onActionShot = this.onActionShot.bind(this);
         this.onDragStart = this.onDragStart.bind(this);
         this.onDragMove = this.onDragMove.bind(this);
         this.onDragEnd = this.onDragEnd.bind(this);
@@ -167,7 +168,13 @@ export class Grid {
         if (this.dragState) {
             return;
         };
+        this.pointerEventHandler.addEventListener(document, PointerEventType.ActionShot, this.onActionShot);
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionMove, this.onDragStart);
+    }
+
+    private onActionShot(_event: SyntheticEvent): void {
+        this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionShot, this.onActionShot);
+        this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onDragStart);
     }
 
     private onDragStart(event: SyntheticEvent): void {

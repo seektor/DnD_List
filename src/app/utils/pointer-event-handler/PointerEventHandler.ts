@@ -108,7 +108,9 @@ export class PointerEventHandler {
             case PointerEventType.ActionMove:
                 return "mousemove";
             case PointerEventType.ActionStart:
-                return "mousedown"
+                return "mousedown";
+            case PointerEventType.ActionShot:
+                return "click";
         }
     }
 
@@ -119,7 +121,9 @@ export class PointerEventHandler {
             case PointerEventType.ActionMove:
                 return "touchmove";
             case PointerEventType.ActionStart:
-                return "touchstart"
+                return "touchstart";
+            case PointerEventType.ActionShot:
+                return "touch"; // there is no such event...
         }
     }
 

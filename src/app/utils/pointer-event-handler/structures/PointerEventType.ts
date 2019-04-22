@@ -1,5 +1,6 @@
 export enum PointerEventType {
     ActionStart = "ActionStart",
     ActionMove = "ActionMove",
-    ActionEnd = "ActionEnd"
+    ActionEnd = "ActionEnd",
+    ActionShot = "ActionShot",
 }
