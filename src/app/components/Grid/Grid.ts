@@ -20,28 +20,35 @@ import { TCoords } from "../../structures/TCoords";
 import { autoScroll } from "../../utils/auto-scroll/autoScroll";
 import { Orientation } from "../../structures/Orientation";
 import ResizeService from "../../services/resizeService/ResizeService";
+import { GridCalculator } from "./utils/GridCalculator/GridCalculator";
+import { TGridItemDimensions } from "./structures/TGridItemDimensions";
 
 export class Grid {
 
     private gridElement: HTMLElement;
+    private gridParentElement: HTMLElement;
+    private scrollableContainerElement: HTMLElement;
     private placeholderElement: HTMLElement;
-    private scrollableContainer: HTMLElement;
+    private gridCalculator: GridCalculator;
     private pointerEventHandler: PointerEventHandler;
 
-    private readonly emptyMarker: number = -1;
-    private gridParams: TGridParams;
+    private allowDynamicClassChange: boolean;
+    private gridItemDimensions: WeakMap<HTMLElement, TGridItemDimensions>;
     private dragState: TGridDragState | null = null;
 
-    constructor(container: HTMLElement, params: TGridParams) {
-        this.gridParams = params;
+    constructor(container: HTMLElement, scrollableContainer: HTMLElement, params: TGridParams) {
+        this.gridParentElement = container;
+        this.scrollableContainerElement = scrollableContainer;
+        this.allowDynamicClassChange = params.allowDynamicClassChange || false;
         this.pointerEventHandler = new PointerEventHandler();
+        this.gridItemDimensions = new WeakMap();
         this.bindMethods();
         this.constructComponent(container, params);
     }
 
     public dispose(): void {
         this.pointerEventHandler.flushAll();
-        ResizeService.unsubscribe(this.scrollableContainer);
+        ResizeService.unsubscribe(this.scrollableContainerElement);
     }
 
     private bindMethods(): void {
@@ -51,19 +58,28 @@ export class Grid {
         this.onDragEnd = this.onDragEnd.bind(this);
     }
 
+    private setGridTemplateColumns(): void {
+        const columnWidth: number = this.gridCalculator.calculateColumnWidth();
+        this.gridElement.style.gridTemplateColumns = `repeat(${this.gridCalculator.getColumnCount()}, ${columnWidth}px)`;
+    }
+
+    private setGridGaps(): void {
+        this.gridElement.style.rowGap = `${this.gridCalculator.getRowGap()}px`;
+        this.gridElement.style.columnGap = `${this.gridCalculator.getColumnGap()}px`;
+    }
+
     private constructComponent(container: HTMLElement, params: TGridParams): void {
         const gridTemplate: string = require("./grid.tpl.html");
-        const gridElement: HTMLElement = Utils.createElementFromTemplate(gridTemplate);
-        GridUtils.setGridTemplateColumns(gridElement, container, params);
-        GridUtils.setGridGaps(gridElement, params.rowGap, params.columnGap);
-        this.gridElement = gridElement;
-        container.append(gridElement);
+        this.gridElement = Utils.createElementFromTemplate(gridTemplate);
+        this.gridCalculator = new GridCalculator(this.gridElement, container, params);
+        this.setGridTemplateColumns();
+        this.setGridGaps();
+        container.append(this.gridElement);
         this.placeholderElement = this.createPlaceholderElement();
-        this.scrollableContainer = container;
         if (params.watchAnyResize) {
-            ResizeService.subscribeToAny(this.scrollableContainer, () => GridUtils.setGridTemplateColumns(gridElement, container, params));
+            ResizeService.subscribeToAny(this.scrollableContainerElement, () => this.setGridTemplateColumns());
         } else {
-            ResizeService.subscribeToWindow(container, () => GridUtils.setGridTemplateColumns(gridElement, container, params));
+            ResizeService.subscribeToWindow(container, () => this.setGridTemplateColumns());
         }
     }
 
@@ -77,30 +93,37 @@ export class Grid {
     public addItemWithClass(content: HTMLElement): void {
         const item: HTMLElement = this.createItem(content);
         this.gridElement.append(item);
-        const itemProperties: TGridItemProperties = GridUtils.getGridItemProperties(content, this.gridParams.columnCount);
-        this.setGridItemAttributes(item, itemProperties.rowspan, itemProperties.colspan);
+        const itemProperties: TGridItemProperties = this.getGridItemPropertiesFromStyles(content, this.gridCalculator.getColumnCount());
+        this.gridItemDimensions.set(item, { colspan: itemProperties.colspan, rowspan: itemProperties.rowspan });
         this.setGridItemStyles(item, itemProperties.rowspan, itemProperties.colspan);
-        if (this.gridParams.allowDynamicClassChange) {
+        if (this.allowDynamicClassChange) {
             this.setClassObserver(item);
+        }
+    }
+
+    private getGridItemPropertiesFromStyles(item: HTMLElement, columnCount: number): TGridItemProperties {
+        const computedProperties: CSSStyleDeclaration = window.getComputedStyle(item);
+        const rowspanProperty: RegExpExecArray | null = /span \d/.exec(computedProperties.gridRowStart);
+        const colspanProperty: RegExpExecArray | null = /span \d/.exec(computedProperties.gridColumnStart);
+        const rowspan: number = rowspanProperty === null ? 1 : parseInt(rowspanProperty[0].split(' ')[1]);
+        const colspan: number = colspanProperty === null ? 1 : Math.min(parseInt(colspanProperty[0].split(' ')[1]), columnCount);
+        return {
+            colspan: colspan,
+            rowspan: rowspan,
         }
     }
 
     private setClassObserver(item: HTMLElement): void {
         const classChangeElement: HTMLElement = item.firstElementChild as HTMLElement;
         const observer: MutationObserver = new MutationObserver((_mutations: MutationRecord[]) => {
-            const itemProperties: TGridItemProperties = GridUtils.getGridItemProperties(classChangeElement as HTMLElement, this.gridParams.columnCount);
-            this.setGridItemAttributes(item, itemProperties.rowspan, itemProperties.colspan);
+            const itemProperties: TGridItemProperties = this.getGridItemPropertiesFromStyles(classChangeElement as HTMLElement, this.gridCalculator.getColumnCount());
+            this.gridItemDimensions.set(item, { colspan: itemProperties.colspan, rowspan: itemProperties.rowspan });
             this.setGridItemStyles(item, itemProperties.rowspan, itemProperties.colspan);
         });
         observer.observe(classChangeElement, {
             attributes: true,
             attributeFilter: ['class']
         });
-    }
-
-    private setGridItemAttributes(item: HTMLElement, rowspan: number, colspan: number): void {
-        item.setAttribute(GridAttributeHooks.rowspan, rowspan.toString());
-        item.setAttribute(GridAttributeHooks.colspan, colspan.toString());
     }
 
     private setGridItemStyles(item: HTMLElement, rowspan: number, colspan: number): void {
@@ -120,17 +143,8 @@ export class Grid {
         return wrapper;
     }
 
-    private createGridMapData(itemsList: HTMLElement[], columnCount: number): TGridMapData {
-        return GridUtils.createGridDataView(
-            itemsList,
-            columnCount,
-            this.emptyMarker,
-            (item) => parseFloat(item.getAttribute(GridAttributeHooks.rowspan)),
-            (item) => parseFloat(item.getAttribute(GridAttributeHooks.colspan)))
-    }
-
     private calculateInitialDragViewportParams(event: SyntheticEvent): TInitialDragViewportParams {
-        const scrollableContainerClientRect: ClientRect = this.scrollableContainer.getBoundingClientRect();
+        const scrollableContainerClientRect: ClientRect = this.scrollableContainerElement.getBoundingClientRect();
         const gridElementClientRect: ClientRect = this.gridElement.getBoundingClientRect();
         const windowWidth: number = window.innerWidth || document.body.clientWidth;
         const windowHeight: number = window.innerHeight || document.body.clientHeight;
@@ -151,12 +165,12 @@ export class Grid {
 
     private createInitialDragState(event: SyntheticEvent, itemsList: HTMLElement[], draggedElement: HTMLElement): TGridDragState {
         const initialDragViewportParams: TInitialDragViewportParams = this.calculateInitialDragViewportParams(event);
-        const gridMapData: TGridMapData = this.createGridMapData(itemsList, this.gridParams.columnCount);
+        const gridMapData: TGridMapData = this.gridCalculator.createGridMapData(itemsList, this.gridItemDimensions);
         const placeholderIndex: number = itemsList.indexOf(this.placeholderElement);
-        const gridDimensions: TGridDimensions = GridUtils.calculateGridDimensions(this.gridElement, gridMapData.gridMap, this.gridParams.columnCount, this.gridParams.rowGap, this.gridParams.columnGap, null);
+        const gridDimensions: TGridDimensions = this.gridCalculator.calculateGridDimensions(gridMapData.gridMap, null);
         const itemTranslations: WeakMap<HTMLElement, TTranslations> = new WeakMap();
         itemsList.forEach(item => itemTranslations.set(item, { translateX: 0, translateY: 0 }));
-        const gridView: TGridView = { gridDimensions, itemsList, gridMapData, itemTranslations };
+        const gridView: TGridView = { gridDimensions, itemsList, placeholderIndex, gridMapData, itemTranslations };
         return {
             initialDragViewportParams,
             draggedElement,
@@ -202,26 +216,27 @@ export class Grid {
         if (this.dragState.isTranslating) {
             return;
         }
-        const gridClientX: number = this.scrollableContainer.scrollLeft + event.clientX - this.dragState.initialDragViewportParams.initialGridElementLeft;
-        const gridClientY: number = this.scrollableContainer.scrollTop + event.clientY - this.dragState.initialDragViewportParams.initialGridElementTop;
-        const gridCoords: TCoords = GridUtils.calculateGridCoords(gridClientX, gridClientY, this.dragState.gridView.gridDimensions);
+        const gridClientX: number = this.scrollableContainerElement.scrollLeft + event.clientX - this.dragState.initialDragViewportParams.initialGridElementLeft;
+        const gridClientY: number = this.scrollableContainerElement.scrollTop + event.clientY - this.dragState.initialDragViewportParams.initialGridElementTop;
+        const gridCoords: TCoords = this.gridCalculator.calculateGridCoords(gridClientX, gridClientY, this.dragState.gridView.gridDimensions);
         const previousGridMap: Int16Array[] = this.dragState.gridView.gridMapData.gridMap;
 
 
 
 
 
-        const newPlaceholderPosition: number = this.findNewPlaceholderPosition(previousGridMap, this.dragState.gridView.itemTranslations, gridCoords, gridClientX);
+        const newPlaceholderPosition: number = this.gridCalculator.findNewPlaceholderPosition(this.dragState.gridView, gridCoords, gridClientX);
         if (this.dragState.placeholderIndex !== newPlaceholderPosition) {
             const sledge = this.dragState.placeholderIndex < newPlaceholderPosition ? Math.max(0, newPlaceholderPosition - 1) : newPlaceholderPosition;
             const currentItemList: HTMLElement[] = this.getNewItemList(this.dragState.gridView.itemsList, this.dragState.placeholderIndex, sledge);
-            const currentGridMapData: TGridMapData = this.createGridMapData(currentItemList, this.gridParams.columnCount);
-            const currentGridDimensions: TGridDimensions = GridUtils.calculateGridDimensions(this.gridElement, currentGridMapData.gridMap, this.gridParams.columnCount, this.gridParams.rowGap, this.gridParams.columnGap, this.dragState.gridView.gridDimensions);
+            const currentGridMapData: TGridMapData = this.gridCalculator.createGridMapData(currentItemList, this.gridItemDimensions);;
+            const currentGridDimensions: TGridDimensions = this.gridCalculator.calculateGridDimensions(currentGridMapData.gridMap, this.dragState.gridView.gridDimensions);
             const currentItemTranslations = this.createAnimations(this.dragState.gridView, currentItemList, currentGridMapData, currentGridDimensions);
             GridUtils.calculateForbiddenTrigger(currentGridMapData.gridMap, gridClientX, gridCoords, currentItemList, currentItemTranslations);
             this.dragState.gridView = {
                 itemsList: currentItemList,
                 gridDimensions: currentGridDimensions,
+                placeholderIndex: sledge,
                 gridMapData: currentGridMapData,
                 itemTranslations: currentItemTranslations
             }
@@ -236,15 +251,15 @@ export class Grid {
         let horizontalIncrement: number | null = null;
         if (this.isBetween(gridX, 0, horizontalScrollTriggerWidth)) {
             horizontalIncrement = -(horizontalScrollTriggerWidth - gridX) * incrementReducer;
-        } else if (this.isBetween(gridX, this.scrollableContainer.clientWidth - horizontalScrollTriggerWidth, this.scrollableContainer.clientWidth)) {
-            horizontalIncrement = (horizontalScrollTriggerWidth - (this.scrollableContainer.clientWidth - gridX)) * incrementReducer;
+        } else if (this.isBetween(gridX, this.scrollableContainerElement.clientWidth - horizontalScrollTriggerWidth, this.scrollableContainerElement.clientWidth)) {
+            horizontalIncrement = (horizontalScrollTriggerWidth - (this.scrollableContainerElement.clientWidth - gridX)) * incrementReducer;
         }
 
         let verticalIncrement: number | null = null;
         if (this.isBetween(gridY, 0, verticalScrollTriggerHeight)) {
             verticalIncrement = -(verticalScrollTriggerHeight - gridY) * incrementReducer;
-        } else if (this.isBetween(gridY, this.scrollableContainer.clientHeight - verticalScrollTriggerHeight, this.scrollableContainer.clientHeight)) {
-            verticalIncrement = (verticalScrollTriggerHeight - (this.scrollableContainer.clientHeight - gridY)) * incrementReducer;
+        } else if (this.isBetween(gridY, this.scrollableContainerElement.clientHeight - verticalScrollTriggerHeight, this.scrollableContainerElement.clientHeight)) {
+            verticalIncrement = (verticalScrollTriggerHeight - (this.scrollableContainerElement.clientHeight - gridY)) * incrementReducer;
         }
 
         const shouldScroll: boolean = horizontalIncrement !== null || verticalIncrement !== null;
@@ -254,7 +269,7 @@ export class Grid {
                 this.dragState.containerScrollCallbacks.setIncrement(Orientation.Horizontal, horizontalIncrement || 0);
                 this.dragState.containerScrollCallbacks.setIncrement(Orientation.Vertical, verticalIncrement || 0);
             } else {
-                this.dragState.containerScrollCallbacks = autoScroll(this.scrollableContainer, horizontalIncrement, verticalIncrement, () => this.onDragMove({ ...event }));
+                this.dragState.containerScrollCallbacks = autoScroll(this.scrollableContainerElement, horizontalIncrement, verticalIncrement, () => this.onDragMove({ ...event }));
             }
         } else if (this.dragState.containerScrollCallbacks) {
             this.dragState.containerScrollCallbacks.cancel();
@@ -301,31 +316,6 @@ export class Grid {
         return newItemList;
     }
 
-    private findNewPlaceholderPosition(gridMap: Int16Array[], itemTranslations: WeakMap<HTMLElement, TTranslations>, gridCoords: TCoords, gridClientX: number): number {
-        let newPlaceholderPosition: number;
-        const currentItemMarker: number = gridMap[gridCoords.y][gridCoords.x];
-        if (currentItemMarker === this.emptyMarker) {
-            const gridCoordsToTheLeft: TCoords = { x: gridCoords.x - 1, y: gridCoords.y };
-            const itemMarkerToTheLeft: number | null = GridUtils.findFirstItemMarkerUsingLeftFlow(gridMap, gridCoordsToTheLeft, this.emptyMarker);
-            newPlaceholderPosition = itemMarkerToTheLeft === null ? 0 : itemMarkerToTheLeft + 1;
-        } else {
-            const item: HTMLElement = this.dragState.gridView.itemsList[currentItemMarker];
-            if (item === this.placeholderElement) {
-                newPlaceholderPosition = currentItemMarker;
-            } else {
-                const currentItemTranslations: TTranslations = itemTranslations.get(item);
-                const itemCenterX: number = item.offsetLeft + (item.offsetWidth * 0.5) + currentItemTranslations.translateX;
-                const itemSide: Direction = gridClientX < itemCenterX ? Direction.Left : Direction.Right;
-                if (itemSide === Direction.Left) {
-                    newPlaceholderPosition = currentItemMarker;
-                } else {
-                    newPlaceholderPosition = currentItemMarker + 1;
-                }
-            }
-        }
-        return newPlaceholderPosition;
-    }
-
     private onDragEnd(event: SyntheticEvent): void {
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onDragMove);
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
@@ -352,6 +342,7 @@ export class Grid {
             this.gridElement.insertBefore(child, toNode);
             this.removeDraggedElementStyles();
             this.dragState.draggedElement.style.position = '';
+            this.dragState = null;
         });
     }
 
@@ -364,8 +355,8 @@ export class Grid {
     }
 
     private setPlaceholderStyles(mirrorGridItem: HTMLElement): void {
-        const itemProperties: TGridItemProperties = GridUtils.getGridItemProperties(mirrorGridItem, this.gridParams.columnCount);
-        this.setGridItemAttributes(this.placeholderElement, itemProperties.rowspan, itemProperties.colspan);
+        const itemProperties: TGridItemProperties = this.getGridItemPropertiesFromStyles(mirrorGridItem, this.gridCalculator.getColumnCount());
+        this.gridItemDimensions.set(this.placeholderElement, { colspan: itemProperties.colspan, rowspan: itemProperties.rowspan });
         this.placeholderElement.style.width = `${mirrorGridItem.offsetWidth}px`;
         this.placeholderElement.style.height = `${mirrorGridItem.offsetHeight}px`;
         this.placeholderElement.style.gridRowStart = `span ${itemProperties.rowspan}`;
@@ -373,8 +364,7 @@ export class Grid {
     }
 
     private removePlaceholderStyles(): void {
-        this.placeholderElement.setAttribute(GridAttributeHooks.rowspan, "");
-        this.placeholderElement.setAttribute(GridAttributeHooks.colspan, "");
+        this.gridItemDimensions.delete(this.placeholderElement);
         this.placeholderElement.style.width = ``;
         this.placeholderElement.style.height = ``;
         this.placeholderElement.style.gridRowStart = ``;

@@ -6,6 +6,15 @@ import { AbstractGridDemo } from "../AbstractGridDemo";
 
 export class GridDemo extends AbstractGridDemo {
 
+    private gridParams: TGridParams = {
+        columnCount: 12,
+        columnGap: 30,
+        rowGap: 30,
+        minColumnWidth: 120,
+        watchAnyResize: false,
+        allowDynamicClassChange: true,
+    }
+
     constructor(container: HTMLElement) {
         super();
         this.construct(container);
@@ -23,7 +32,7 @@ export class GridDemo extends AbstractGridDemo {
     }
 
     private load1x1Scenario(containerElement: HTMLElement, rowCount: number): void {
-        const grid: Grid = new Grid(containerElement, this.gridParams);
+        const grid: Grid = new Grid(containerElement, containerElement, this.gridParams);
         const gradientColors: string[][] = [...Utils.gradientColors.values()];
         for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
             for (let columnIndex = 0; columnIndex < this.gridParams.columnCount; columnIndex++) {
@@ -34,7 +43,7 @@ export class GridDemo extends AbstractGridDemo {
     }
 
     private loadInterlacedScenario(containerElement: HTMLElement, itemCount: number): void {
-        const grid: Grid = new Grid(containerElement, this.gridParams);
+        const grid: Grid = new Grid(containerElement, containerElement, this.gridParams);
         const gradientColors: string[][] = [...Utils.gradientColors.values()];
         for (let itemIndex = 0; itemIndex < itemCount; itemIndex++) {
             const size: number = itemIndex % 2 === 0 ? 2 : 1;

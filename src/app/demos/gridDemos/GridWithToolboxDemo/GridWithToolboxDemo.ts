@@ -41,14 +41,14 @@ export class GridWithToolboxDemo extends AbstractGridDemo {
 
     }
 
-    private populateToolbox(toolbox: Toolbox) {
+    private populateToolbox(toolbox: Toolbox): void {
         toolbox.addItem("Dark");
         toolbox.addItem("Inverted");
         toolbox.addItem("Image");
     }
 
     private load1x1Scenario(containerElement: HTMLElement, rowCount: number): void {
-        const grid: Grid = new Grid(containerElement, this.gridParams);
+        const grid: Grid = new Grid(containerElement, containerElement, this.gridParams);
         const gradientColors: string[][] = [...Utils.gradientColors.values()];
         for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
             for (let columnIndex = 0; columnIndex < this.gridParams.columnCount; columnIndex++) {
