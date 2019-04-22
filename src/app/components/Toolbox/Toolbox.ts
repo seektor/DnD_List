@@ -5,17 +5,22 @@ import ToolboxAttributeHooks from "./structures/ToolboxAttributeHooks";
 import { ToolboxItemFactory } from "./factories/ToolboxItemFactory/ToolboxItemFactory";
 import { PointerEventHandler } from "../../utils/pointer-event-handler/PointerEventHandler";
 import { PointerEventType } from "../../utils/pointer-event-handler/structures/PointerEventType";
+import { IGridHandlers } from "../Grid/interfaces/IGridHandlers";
+import { TToolboxItem } from "./structures/TToolboxItem";
 
 export class Toolbox {
 
     private listElement: HTMLElement;
+    private originalDraggedElement: HTMLElement = null;
     private draggedElement: HTMLElement = null;
     private initialCoordinates: TCoords = null;
     private pointerEventHandler: PointerEventHandler;
+    private toolboxItems: WeakMap<HTMLElement, TToolboxItem>;
 
     constructor(container: HTMLElement) {
         this.constructComponent(container);
         this.pointerEventHandler = new PointerEventHandler();
+        this.toolboxItems = new WeakMap();
         this.bindMethods();
     }
 
@@ -36,28 +41,35 @@ export class Toolbox {
         container.append(toolboxElement);
     }
 
-    public addItem(title: string): void {
+    public addItem(title: string, dropContent: HTMLElement, dropCallbacks: IGridHandlers): void {
         const item: HTMLElement = ToolboxItemFactory(title);
         this.pointerEventHandler.addEventListener(item, PointerEventType.ActionStart, this.onDragStart);
+        this.toolboxItems.set(item, {
+            dropzoneCallbacks: dropCallbacks,
+            dropzoneContent: dropContent
+        });
         this.listElement.append(item);
     }
 
     private onDragStart(e: MouseEvent): void {
         this.initialCoordinates = { x: e.clientX, y: e.clientY };
-        const originalElement: HTMLElement = (e.currentTarget as HTMLElement);
-        this.draggedElement = originalElement.cloneNode(true) as HTMLElement;
-        this.detachElement(originalElement);
-        originalElement.after(this.draggedElement);
+        this.originalDraggedElement = (e.currentTarget as HTMLElement);
+        this.draggedElement = this.originalDraggedElement.cloneNode(true) as HTMLElement;
+        this.detachElement(this.originalDraggedElement);
+        this.originalDraggedElement.after(this.draggedElement);
+        const toolboxItem: TToolboxItem = this.toolboxItems.get(this.originalDraggedElement);
+        toolboxItem.dropzoneCallbacks.toggleDropzone(true);
+        toolboxItem.dropzoneCallbacks.onExternalDragStart(this.draggedElement, toolboxItem.dropzoneContent.cloneNode(true) as HTMLElement);
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionMove, this.onDragMove);
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
     }
 
-    private detachElement(element: HTMLElement): void {
-        const draggedElementClientRect: ClientRect = element.getBoundingClientRect();
+    private detachElement(mirrorElement: HTMLElement): void {
+        const draggedElementClientRect: ClientRect = mirrorElement.getBoundingClientRect();
         this.draggedElement.style.top = `${draggedElementClientRect.top}px`;
         this.draggedElement.style.left = `${draggedElementClientRect.left}px`;
-        this.draggedElement.style.width = `${element.clientWidth}px`;
-        this.draggedElement.style.height = `${element.clientHeight}px`;
+        this.draggedElement.style.width = `${mirrorElement.clientWidth}px`;
+        this.draggedElement.style.height = `${mirrorElement.clientHeight}px`;
         this.draggedElement.style.zIndex = `${99999}`;
         this.draggedElement.style.pointerEvents = "none";
         this.draggedElement.style.position = "fixed";
@@ -73,8 +85,11 @@ export class Toolbox {
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onDragMove);
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
         this.pointerEventHandler.removeEventListener(this.draggedElement, PointerEventType.ActionStart, this.onDragStart);
+        const toolboxItem: TToolboxItem = this.toolboxItems.get(this.originalDraggedElement);
+        toolboxItem.dropzoneCallbacks.toggleDropzone(false);
         this.draggedElement.remove();
         this.draggedElement = null;
+        this.originalDraggedElement = null;
     }
 
     private setTranslation(element: HTMLElement, x: number, y: number): void {

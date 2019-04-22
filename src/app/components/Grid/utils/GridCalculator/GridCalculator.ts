@@ -267,7 +267,21 @@ export class GridCalculator {
             initialGridTop: gridElementClientRect.top,
             horizontalScrollTriggerWidth: scrollableContainerVisibleWidth * 0.1,
             verticalScrollTriggerHeight: scrollableContainerVisibleHeight * 0.1,
-            visibleScrollableClientRect
+            visibleScrollableClientRect,
+        }
+    }
+
+    public calculateVisibleGridElementClientRect(): TClientRect {
+        const gridElementClientRect: ClientRect = this.gridElement.getBoundingClientRect();
+        const windowWidth: number = window.innerWidth || document.body.clientWidth;
+        const windowHeight: number = window.innerHeight || document.body.clientHeight;
+        const visibleGridLeft: number = Math.max(0, gridElementClientRect.left);
+        const visibleGridTop: number = Math.max(0, gridElementClientRect.top);
+        return {
+            top: visibleGridTop,
+            bottom: Math.min(windowHeight, visibleGridTop + this.gridElement.clientHeight),
+            left: visibleGridLeft,
+            right: Math.min(windowWidth, visibleGridLeft + this.gridElement.clientWidth),
         }
     }
 

@@ -5,6 +5,7 @@ import { Toolbox } from "../../../components/Toolbox/Toolbox";
 import GridWithToolboxAttributeHooks from "./structures/GridWithToolboxAttributeHooks";
 import { Grid } from "../../../components/Grid/Grid";
 import { TGridParams } from "../../../components/Grid/structures/TGridParams";
+import { ItemFactory } from "../../../viewport/Factories/ItemFactory/ItemFactory";
 
 export class GridWithToolboxDemo extends AbstractGridDemo {
 
@@ -16,6 +17,7 @@ export class GridWithToolboxDemo extends AbstractGridDemo {
         minColumnWidth: 120,
         allowDynamicClassChange: true,
     }
+    private grid: Grid;
 
     constructor(container: HTMLElement) {
         super();
@@ -29,7 +31,6 @@ export class GridWithToolboxDemo extends AbstractGridDemo {
         const toolboxSectionElement: HTMLElement = Utils.getElementByAttribute(demoElement, GridWithToolboxAttributeHooks.toolbox);
         const toolboxContainerElement: HTMLElement = ContainerFactory();
         const toolbox: Toolbox = new Toolbox(toolboxContainerElement);
-        this.populateToolbox(toolbox);
         toolboxSectionElement.append(toolboxContainerElement);
 
         container.append(demoElement);
@@ -37,17 +38,21 @@ export class GridWithToolboxDemo extends AbstractGridDemo {
         const gridSectionElement: HTMLElement = Utils.getElementByAttribute(demoElement, GridWithToolboxAttributeHooks.grid);
         const gridContainerElement: HTMLElement = ContainerFactory();
         gridSectionElement.append(gridContainerElement);
-        this.load1x1Scenario(gridContainerElement, 10);
-        //this.loadInterlacedScenario(gridContainerElement, 10);
+        this.grid = this.load1x1Scenario(gridContainerElement, 10);
+        // this.grid = this.loadInterlacedScenario(gridContainerElement, 16);
+        this.populateToolbox(toolbox, this.grid);
+
     }
 
-    private populateToolbox(toolbox: Toolbox): void {
-        toolbox.addItem("Dark");
-        toolbox.addItem("Inverted");
-        toolbox.addItem("Image");
+    private populateToolbox(toolbox: Toolbox, grid: Grid): void {
+        const darkItem: HTMLElement = this.createPureDarkItem("Toolbox Item");
+        darkItem.classList.add(...this.createClassNames(2, 2));
+        toolbox.addItem("Dark", darkItem, grid.getGridHandlers());
+        // toolbox.addItem("Inverted");
+        // toolbox.addItem("Image");
     }
 
-    private load1x1Scenario(containerElement: HTMLElement, rowCount: number): void {
+    private load1x1Scenario(containerElement: HTMLElement, rowCount: number): Grid {
         const grid: Grid = new Grid(containerElement, containerElement, this.gridParams);
         const gradientColors: string[][] = [...Utils.gradientColors.values()];
         for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
@@ -56,9 +61,10 @@ export class GridWithToolboxDemo extends AbstractGridDemo {
                 grid.addItemWithClass(item);
             }
         }
+        return grid;
     }
 
-    private loadInterlacedScenario(containerElement: HTMLElement, itemCount: number): void {
+    private loadInterlacedScenario(containerElement: HTMLElement, itemCount: number): Grid {
         const grid: Grid = new Grid(containerElement, containerElement, this.gridParams);
         const gradientColors: string[][] = [...Utils.gradientColors.values()];
         for (let itemIndex = 0; itemIndex < itemCount; itemIndex++) {
@@ -66,5 +72,6 @@ export class GridWithToolboxDemo extends AbstractGridDemo {
             const item: HTMLElement = this.createClassItem(`${itemIndex}`, gradientColors[itemIndex % gradientColors.length], size, size);
             grid.addItemWithClass(item);
         }
+        return grid;
     }
 }

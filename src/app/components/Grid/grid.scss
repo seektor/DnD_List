@@ -10,6 +10,10 @@
         border-radius: 5px;
         pointer-events: none;
     }
+
+    &--highlighted {
+        animation: blinking 2s infinite;
+    }
 }
 
 // Items' classes \\
@@ -28,3 +32,17 @@ $maxNumberOfRowsForElement: 20;
         grid-row-start: span $height;
     }
 }
+
+// Animation \\
+
+@keyframes blinking {
+    0%{
+      background-color: #ffab00;
+    }
+    50%{
+      background-color: #ffdd4b;
+    }
+    100%{
+      background-color: #ffab00;
+    }
+  }

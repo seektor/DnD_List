@@ -13,10 +13,22 @@ export class AbstractGridDemo {
         return item;
     }
 
+    protected createPureDarkItem(text: string): HTMLElement {
+        const item: HTMLElement = ItemFactory.DarkItemWithText(text);
+        const itemHeader: HTMLElement = Utils.getElementByAttribute(item, ItemFactoryAttributeHooks.header);
+        itemHeader.setAttribute(GridAttributeHooks.itemDragAnchor, '');
+        itemHeader.style.cursor = 'grab';
+        return item;
+    }
+
     protected createClassItem(text: string, gradientColors: string[], rowspan: number, colspan: number): HTMLElement {
         const item = this.createPureItem(text, gradientColors);
-        const classNames: string[] = [`grid-height-screen-${rowspan}`, `grid-width-screen-${colspan}`];
+        const classNames: string[] = this.createClassNames(rowspan, colspan);
         item.classList.add(...classNames);
         return item;
+    }
+
+    protected createClassNames(rowspan: number, colspan: number): [string, string] {
+        return [`grid-height-screen-${rowspan}`, `grid-width-screen-${colspan}`];
     }
 }

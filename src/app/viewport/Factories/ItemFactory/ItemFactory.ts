@@ -4,7 +4,7 @@ import ItemFactoryClassHooks from "./structures/ItemFactoryClassHooks";
 
 export class ItemFactory {
 
-    public static Item(firstHeaderColor: string, secondHeaderColor: string = null): HTMLElement {
+    private static Item(firstHeaderColor: string, secondHeaderColor: string = null): HTMLElement {
         const itemTemplate: string = require("./item-factory.tpl.html");
         const itemElement: HTMLElement = Utils.createElementFromTemplate(itemTemplate);
         const headerElement: HTMLElement = Utils.getElementByAttribute(itemElement, ItemFactoryAttributeHooks.header);
@@ -12,8 +12,8 @@ export class ItemFactory {
         return itemElement;
     }
 
-    public static DarkItem(): HTMLElement {
-        const item: HTMLElement = this.Item("$212121", "$212121");
+    public static DarkItemWithText(text: string): HTMLElement {
+        const item: HTMLElement = this.ItemWithText(text, "#212121", "#212121");
         item.classList.add(ItemFactoryClassHooks.dark);
         return item;
     }

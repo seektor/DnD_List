@@ -21,6 +21,10 @@ import { GridCalculator } from "./utils/GridCalculator/GridCalculator";
 import { TGridItemDimensions } from "./structures/TGridItemDimensions";
 import { TGridItemTrigger } from "./structures/TGridItemTrigger";
 import { Side } from "../../structures/Side";
+import { IGridHandlers } from "./interfaces/IGridHandlers";
+import GridClassHooks from "./structures/GridClassHooks";
+import { TExternalDragState } from "./structures/TExternalDragState";
+import { TClientRect } from "../../structures/TClientRect";
 
 export class Grid {
 
@@ -35,6 +39,7 @@ export class Grid {
     private gridItemObservers: WeakMap<HTMLElement, MutationObserver>;
     private gridItemDimensions: WeakMap<HTMLElement, TGridItemDimensions>;
     private dragState: TGridDragState | null = null;
+    private externalDragState: TExternalDragState | null = null;
 
     constructor(container: HTMLElement, scrollableContainer: HTMLElement, params: TGridParams) {
         this.gridScrollableElement = scrollableContainer;
@@ -60,6 +65,8 @@ export class Grid {
         this.onDragStart = this.onDragStart.bind(this);
         this.onDragMove = this.onDragMove.bind(this);
         this.onDragEnd = this.onDragEnd.bind(this);
+        this.onExternalDragMove = this.onExternalDragMove.bind(this);
+        this.onExternalDragEnd = this.onExternalDragEnd.bind(this);
     }
 
     private setGridTemplateColumns(): void {
@@ -245,7 +252,7 @@ export class Grid {
     }
 
     private updateAutoScroll(event: SyntheticEvent): void {
-        const { visibleScrollableClientRect, horizontalScrollTriggerWidth, verticalScrollTriggerHeight } = this.dragState.dragViewportParams;
+        const { visibleScrollableClientRect: visibleScrollableClientRect, horizontalScrollTriggerWidth, verticalScrollTriggerHeight } = this.dragState.dragViewportParams;
 
         const scrollStepReducer: number = 0.1;
         let horizontalIncrement: number | null = null;
@@ -399,6 +406,54 @@ export class Grid {
 
     private getClosestGridItem(fromElement: HTMLElement): HTMLElement | null {
         return fromElement.closest(`[${GridAttributeHooks.item}]`) as HTMLElement;
+    }
+
+    private toggleDropzone(isEnabled: boolean): void {
+        if (isEnabled) {
+            this.gridElement.classList.add(GridClassHooks.highlighted);
+        } else {
+            this.gridElement.classList.remove(GridClassHooks.highlighted);
+        }
+    }
+
+    private onExternalDragStart(externalDraggedElement: HTMLElement, itemContentElement: HTMLElement): void {
+        this.externalDragState = {
+            visibleGridElementClientRect: this.gridCalculator.calculateVisibleGridElementClientRect(),
+            itemContent: itemContentElement
+        };
+        this.pointerEventHandler.addEventListener(document, PointerEventType.ActionEnd, this.onExternalDragEnd);
+    }
+
+    private onExternalDragEnd(event: SyntheticEvent): void {
+        this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionEnd, this.onExternalDragEnd);
+        this.toggleExternalAccessListener(false);
+        if (this.isInClientRectRange(event.clientX, event.clientY, this.externalDragState.visibleGridElementClientRect)) {
+            this.addItemWithClass(this.externalDragState.itemContent);
+        }
+        this.externalDragState = null;
+    }
+
+    private toggleExternalAccessListener(isEnabled: boolean): void {
+        if (isEnabled) {
+            this.pointerEventHandler.addEventListener(document, PointerEventType.ActionMove, this.onExternalDragMove);
+        } else {
+            this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onExternalDragMove);
+        }
+    }
+
+    private onExternalDragMove(event: SyntheticEvent): void {
+        // console.log(this.isInClientRectRange(event.clientX, event.clientY, this.externalDragState.visibleGridElementClientRect));
+    }
+
+    private isInClientRectRange(clientX: number, clientY: number, clientRect: TClientRect): boolean {
+        return clientRect.left <= clientX && clientRect.right >= clientX && clientRect.top <= clientY && clientRect.bottom >= clientY;
+    }
+
+    public getGridHandlers(): IGridHandlers {
+        return {
+            toggleDropzone: (isEnabled) => this.toggleDropzone(isEnabled),
+            onExternalDragStart: (externalDraggedElement, itemContentElement) => this.onExternalDragStart(externalDraggedElement, itemContentElement)
+        }
     }
 
 }
