@@ -1,7 +1,7 @@
-import { Utils } from "../../../utils/Utils";
+import { Utils } from '../../../utils/Utils';
 
 export function ContainerFactory(): HTMLElement {
-    const containerTemplate: string = require("./container-factory.tpl.html");
+    const containerTemplate: string = require('./container-factory.tpl.html');
     const containerElement: HTMLElement = Utils.createElementFromTemplate(containerTemplate);
     return containerElement;
 }

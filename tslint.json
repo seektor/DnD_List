@@ -3,6 +3,10 @@
         "typedef": [
             true,
             "call-signature"
+        ],
+        "quotemark": [
+            true,
+            "single"
         ]
     }
 }

@@ -4,6 +4,6 @@ export interface TGridWithToolboxAttributeHooks {
 }
 
 export default {
-    grid: "data-grid-wt-demo__grid",
-    toolbox: "data-grid-wt-demo__toolbox"
+    grid: 'data-grid-wt-demo__grid',
+    toolbox: 'data-grid-wt-demo__toolbox'
 } as TGridWithToolboxAttributeHooks;

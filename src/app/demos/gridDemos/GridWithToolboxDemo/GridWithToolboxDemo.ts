@@ -1,11 +1,11 @@
-import { AbstractGridDemo } from "../AbstractGridDemo";
-import { Utils } from "../../../utils/Utils";
-import { ContainerFactory } from "../../../Viewport/Factories/ContainerFactory/ContainerFactory";
-import { Toolbox } from "../../../components/Toolbox/Toolbox";
-import GridWithToolboxAttributeHooks from "./structures/GridWithToolboxAttributeHooks";
-import { Grid } from "../../../components/Grid/Grid";
-import { TGridParams } from "../../../components/Grid/structures/TGridParams";
-import { ItemFactory } from "../../../viewport/Factories/ItemFactory/ItemFactory";
+import { AbstractGridDemo } from '../AbstractGridDemo';
+import { Utils } from '../../../utils/Utils';
+import { ContainerFactory } from '../../../Viewport/Factories/ContainerFactory/ContainerFactory';
+import { Toolbox } from '../../../components/Toolbox/Toolbox';
+import GridWithToolboxAttributeHooks from './structures/GridWithToolboxAttributeHooks';
+import { Grid } from '../../../components/Grid/Grid';
+import { TGridParams } from '../../../components/Grid/structures/TGridParams';
+import { ItemFactory } from '../../../viewport/Factories/ItemFactory/ItemFactory';
 
 export class GridWithToolboxDemo extends AbstractGridDemo {
 
@@ -25,7 +25,7 @@ export class GridWithToolboxDemo extends AbstractGridDemo {
     }
 
     private construct(container: HTMLElement): void {
-        const demoTemplate: string = require("./grid-with-toolbox-demo.tpl.html");
+        const demoTemplate: string = require('./grid-with-toolbox-demo.tpl.html');
         const demoElement: HTMLElement = Utils.createElementFromTemplate(demoTemplate);
 
         const toolboxSectionElement: HTMLElement = Utils.getElementByAttribute(demoElement, GridWithToolboxAttributeHooks.toolbox);
@@ -45,9 +45,9 @@ export class GridWithToolboxDemo extends AbstractGridDemo {
     }
 
     private populateToolbox(toolbox: Toolbox, grid: Grid): void {
-        const darkItem: HTMLElement = this.createPureDarkItem("Toolbox Item");
+        const darkItem: HTMLElement = this.createPureDarkItem('Toolbox Item');
         darkItem.classList.add(...this.createClassNames(2, 2));
-        toolbox.addItem("Dark", darkItem, grid.getGridHandlers());
+        toolbox.addItem('Dark', darkItem, grid.getGridHandlers());
         // toolbox.addItem("Inverted");
         // toolbox.addItem("Image");
     }

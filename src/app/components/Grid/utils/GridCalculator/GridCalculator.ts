@@ -1,15 +1,15 @@
-import { TGridParams } from "../../structures/TGridParams";
-import { TGridDimensions } from "../../structures/TGridDimensions";
-import { TGridMapData } from "../../structures/TGridMapData";
-import { TGridItemPlacement } from "../../structures/TGridItemPlacement";
-import { TGridItemDimensions } from "../../structures/TGridItemDimensions";
-import { TTranslations } from "../../../../structures/TTranslations";
-import { TCoords } from "../../../../structures/TCoords";
-import { TGridView } from "../../structures/TGridView";
-import { Side } from "../../../../structures/Side";
-import { TDragViewportParams } from "../../../List/structures/TDragViewportParams";
-import { TGridItemTrigger } from "../../structures/TGridItemTrigger";
-import { TClientRect } from "../../../../structures/TClientRect";
+import { TGridParams } from '../../structures/TGridParams';
+import { TGridDimensions } from '../../structures/TGridDimensions';
+import { TGridMapData } from '../../structures/TGridMapData';
+import { TGridItemPlacement } from '../../structures/TGridItemPlacement';
+import { TGridItemDimensions } from '../../structures/TGridItemDimensions';
+import { TTranslations } from '../../../../structures/TTranslations';
+import { TCoords } from '../../../../structures/TCoords';
+import { TGridView } from '../../structures/TGridView';
+import { Side } from '../../../../structures/Side';
+import { TDragViewportParams } from '../../../List/structures/TDragViewportParams';
+import { TGridItemTrigger } from '../../structures/TGridItemTrigger';
+import { TClientRect } from '../../../../structures/TClientRect';
 
 export class GridCalculator {
 

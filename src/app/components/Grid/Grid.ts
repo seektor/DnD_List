@@ -1,30 +1,30 @@
-import { Utils } from "../../utils/Utils";
-import { TGridParams } from "./structures/TGridParams";
-import GridAttributeHooks from "./structures/GridAttributeHooks";
-import { TGridItemProperties } from "./structures/TGridItemProperties";
-import { TDragViewportParams } from "../List/structures/TDragViewportParams";
-import { PointerEventHandler } from "../../utils/pointer-event-handler/PointerEventHandler";
-import { PointerEventType } from "../../utils/pointer-event-handler/structures/PointerEventType";
-import { TGridItemPlacement } from "./structures/TGridItemPlacement";
-import { SyntheticEvent } from "../../utils/pointer-event-handler/structures/SyntheticEvent";
-import { TTranslate } from "../../utils/smooth-translate/structures/TTranslate";
-import { smoothTranslate } from "../../utils/smooth-translate/smoothTranslate";
-import { TGridMapData } from "./structures/TGridMapData";
-import { TGridDragState } from "./structures/TGridDragState";
-import { TGridView } from "./structures/TGridView";
-import { TGridDimensions } from "./structures/TGridDimensions";
-import { TTranslations } from "../../structures/TTranslations";
-import { TCoords } from "../../structures/TCoords";
-import { autoScroll } from "../../utils/auto-scroll/autoScroll";
-import ResizeService from "../../services/resizeService/ResizeService";
-import { GridCalculator } from "./utils/GridCalculator/GridCalculator";
-import { TGridItemDimensions } from "./structures/TGridItemDimensions";
-import { TGridItemTrigger } from "./structures/TGridItemTrigger";
-import { Side } from "../../structures/Side";
-import { IGridHandlers } from "./interfaces/IGridHandlers";
-import GridClassHooks from "./structures/GridClassHooks";
-import { TExternalDragState } from "./structures/TExternalDragState";
-import { TClientRect } from "../../structures/TClientRect";
+import { Utils } from '../../utils/Utils';
+import { TGridParams } from './structures/TGridParams';
+import GridAttributeHooks from './structures/GridAttributeHooks';
+import { TGridItemProperties } from './structures/TGridItemProperties';
+import { TDragViewportParams } from '../List/structures/TDragViewportParams';
+import { PointerEventHandler } from '../../utils/pointer-event-handler/PointerEventHandler';
+import { PointerEventType } from '../../utils/pointer-event-handler/structures/PointerEventType';
+import { TGridItemPlacement } from './structures/TGridItemPlacement';
+import { SyntheticEvent } from '../../utils/pointer-event-handler/structures/SyntheticEvent';
+import { TTranslate } from '../../utils/smooth-translate/structures/TTranslate';
+import { smoothTranslate } from '../../utils/smooth-translate/smoothTranslate';
+import { TGridMapData } from './structures/TGridMapData';
+import { TGridDragState } from './structures/TGridDragState';
+import { TGridView } from './structures/TGridView';
+import { TGridDimensions } from './structures/TGridDimensions';
+import { TTranslations } from '../../structures/TTranslations';
+import { TCoords } from '../../structures/TCoords';
+import { autoScroll } from '../../utils/auto-scroll/autoScroll';
+import ResizeService from '../../services/resizeService/ResizeService';
+import { GridCalculator } from './utils/GridCalculator/GridCalculator';
+import { TGridItemDimensions } from './structures/TGridItemDimensions';
+import { TGridItemTrigger } from './structures/TGridItemTrigger';
+import { Side } from '../../structures/Side';
+import { IGridHandlers } from './interfaces/IGridHandlers';
+import GridClassHooks from './structures/GridClassHooks';
+import { TExternalDragState } from './structures/TExternalDragState';
+import { TClientRect } from '../../structures/TClientRect';
 
 export class Grid {
 
@@ -80,7 +80,7 @@ export class Grid {
     }
 
     private constructComponent(container: HTMLElement, scrollableContainer: HTMLElement, params: TGridParams): void {
-        const gridTemplate: string = require("./grid.tpl.html");
+        const gridTemplate: string = require('./grid.tpl.html');
         this.gridElement = Utils.createElementFromTemplate(gridTemplate);
         this.gridCalculator = new GridCalculator(this.gridElement, container, scrollableContainer, params);
         this.setGridTemplateColumns();
@@ -380,8 +380,8 @@ export class Grid {
         this.dragState.draggedElement.style.left = `${mirrorItemClientRect.left}px`;
         this.dragState.draggedElement.style.width = `${this.dragState.draggedElement.offsetWidth}px`;
         this.dragState.draggedElement.style.height = `${this.dragState.draggedElement.offsetHeight}px`;
-        this.dragState.draggedElement.style.zIndex = "1";
-        this.dragState.draggedElement.style.pointerEvents = "none";
+        this.dragState.draggedElement.style.zIndex = '1';
+        this.dragState.draggedElement.style.pointerEvents = 'none';
     }
 
     private removeDraggedElementStyles(): void {
@@ -395,7 +395,7 @@ export class Grid {
 
     private detachDraggedElement(draggedElement: HTMLElement): void {
         draggedElement.after(this.placeholderElement);
-        draggedElement.style.position = "fixed";
+        draggedElement.style.position = 'fixed';
     }
 
     private attachDraggedElement(draggedElement: HTMLElement, rightNode: HTMLElement): void {

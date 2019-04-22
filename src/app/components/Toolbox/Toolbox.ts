@@ -1,12 +1,11 @@
-import { IListHandlers } from "../List/interfaces/IListHandlers";
-import { TCoords } from "../../structures/TCoords";
-import { Utils } from "../../utils/Utils";
-import ToolboxAttributeHooks from "./structures/ToolboxAttributeHooks";
-import { ToolboxItemFactory } from "./factories/ToolboxItemFactory/ToolboxItemFactory";
-import { PointerEventHandler } from "../../utils/pointer-event-handler/PointerEventHandler";
-import { PointerEventType } from "../../utils/pointer-event-handler/structures/PointerEventType";
-import { IGridHandlers } from "../Grid/interfaces/IGridHandlers";
-import { TToolboxItem } from "./structures/TToolboxItem";
+import { TCoords } from '../../structures/TCoords';
+import { Utils } from '../../utils/Utils';
+import ToolboxAttributeHooks from './structures/ToolboxAttributeHooks';
+import { ToolboxItemFactory } from './factories/ToolboxItemFactory/ToolboxItemFactory';
+import { PointerEventHandler } from '../../utils/pointer-event-handler/PointerEventHandler';
+import { PointerEventType } from '../../utils/pointer-event-handler/structures/PointerEventType';
+import { IGridHandlers } from '../Grid/interfaces/IGridHandlers';
+import { TToolboxItem } from './structures/TToolboxItem';
 
 export class Toolbox {
 
@@ -35,7 +34,7 @@ export class Toolbox {
     }
 
     private constructComponent(container: HTMLElement): void {
-        const template: string = require("./toolbox.tpl.html");
+        const template: string = require('./toolbox.tpl.html');
         const toolboxElement: HTMLElement = Utils.createElementFromTemplate(template);
         this.listElement = Utils.getElementByAttribute(toolboxElement, ToolboxAttributeHooks.list);
         container.append(toolboxElement);
@@ -71,8 +70,8 @@ export class Toolbox {
         this.draggedElement.style.width = `${mirrorElement.clientWidth}px`;
         this.draggedElement.style.height = `${mirrorElement.clientHeight}px`;
         this.draggedElement.style.zIndex = `${99999}`;
-        this.draggedElement.style.pointerEvents = "none";
-        this.draggedElement.style.position = "fixed";
+        this.draggedElement.style.pointerEvents = 'none';
+        this.draggedElement.style.position = 'fixed';
     }
 
     private onDragMove(event: MouseEvent): void {

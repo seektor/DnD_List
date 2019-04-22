@@ -4,6 +4,6 @@ export interface TItemFactoryAttributeHooks {
 }
 
 export default {
-    header: "data-item-factory__header",
-    body: "data-item-factory__body",
+    header: 'data-item-factory__header',
+    body: 'data-item-factory__body',
 } as TItemFactoryAttributeHooks;

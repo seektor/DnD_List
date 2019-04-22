@@ -1,4 +1,4 @@
-import { easeInCubic } from "../easingFunctions";
+import { easeInCubic } from '../easingFunctions';
 
 export function smoothScroll(container: HTMLElement, duration: number, distance: number, onEndCallback?: () => void): void {
 

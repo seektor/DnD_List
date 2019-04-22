@@ -3,5 +3,5 @@ export interface TToolboxAttributeHooks {
 }
 
 export default {
-    list: "data-toolbox__list"
+    list: 'data-toolbox__list'
 } as TToolboxAttributeHooks;

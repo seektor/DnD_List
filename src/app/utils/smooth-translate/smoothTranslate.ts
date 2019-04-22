@@ -1,5 +1,5 @@
-import { TTranslate } from "./structures/TTranslate";
-import { easeInOutCubic } from "../easingFunctions";
+import { TTranslate } from './structures/TTranslate';
+import { easeInOutCubic } from '../easingFunctions';
 
 export function smoothTranslate(translations: TTranslate[], duration: number, onEndCallback?: () => void): void {
 

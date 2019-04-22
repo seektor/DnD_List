@@ -1,4 +1,4 @@
-import { IAutoScrollCallbacks } from "./interfaces/IAutoScrollCallbacks";
+import { IAutoScrollCallbacks } from './interfaces/IAutoScrollCallbacks';
 
 export function autoScroll(container: HTMLElement, horizontalIncrement: number, verticalIncrement: number, onIncrementCallback?: () => void): IAutoScrollCallbacks {
 
@@ -15,7 +15,7 @@ export function autoScroll(container: HTMLElement, horizontalIncrement: number, 
         setIncrement: setIncrement,
     };
 
-    function cancel() {
+    function cancel(): void {
         isCancelled = true;
         cancelAnimationFrame(scrollRequestReference);
         cancelAnimationFrame(callbackRequestReference);

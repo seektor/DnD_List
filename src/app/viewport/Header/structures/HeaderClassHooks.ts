@@ -3,5 +3,5 @@ export interface THeaderClassHooks {
 }
 
 export default {
-    itemActive: "header__navbar-item--active",
+    itemActive: 'header__navbar-item--active',
 } as THeaderClassHooks;

@@ -1,8 +1,8 @@
-import { SyntheticEvent } from "./structures/SyntheticEvent";
-import { PointerEventsMap } from "./structures/PointerEventsMap";
-import { PointerEventType } from "./structures/PointerEventType";
-import { SyntheticEventCallback, MouseEventCallback, TouchEventCallback } from "./structures/EventCallbacks";
-import { PointerEventsMapCallbacks } from "./structures/PointerEventsMapCallback";
+import { SyntheticEvent } from './structures/SyntheticEvent';
+import { PointerEventsMap } from './structures/PointerEventsMap';
+import { PointerEventType } from './structures/PointerEventType';
+import { SyntheticEventCallback, MouseEventCallback, TouchEventCallback } from './structures/EventCallbacks';
+import { PointerEventsMapCallbacks } from './structures/PointerEventsMapCallback';
 
 export class PointerEventHandler {
 
@@ -104,30 +104,30 @@ export class PointerEventHandler {
     private getMouseEventName(type: PointerEventType): string {
         switch (type) {
             case PointerEventType.ActionEnd:
-                return "mouseup";
+                return 'mouseup';
             case PointerEventType.ActionMove:
-                return "mousemove";
+                return 'mousemove';
             case PointerEventType.ActionStart:
-                return "mousedown";
+                return 'mousedown';
             case PointerEventType.ActionShot:
-                return "click";
+                return 'click';
         }
     }
 
     private getTouchEventName(type: PointerEventType): string {
         switch (type) {
             case PointerEventType.ActionEnd:
-                return "touchend";
+                return 'touchend';
             case PointerEventType.ActionMove:
-                return "touchmove";
+                return 'touchmove';
             case PointerEventType.ActionStart:
-                return "touchstart";
+                return 'touchstart';
             case PointerEventType.ActionShot:
-                return "touch"; // there is no such event...
+                return 'touch'; // there is no such event...
         }
     }
 
-    private nullifyEvent(event: SyntheticEvent) {
+    private nullifyEvent(event: SyntheticEvent): void {
         Object.keys(event).forEach((key) => this.syntheticEvent[key] = null);
     }
 

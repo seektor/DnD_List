@@ -1,5 +1,5 @@
-import { TResizeSubscriber } from "./structures/TResizeSubscriber";
-import { TWindowResizeSubscriber } from "./structures/TWindowResizeSubscriber";
+import { TResizeSubscriber } from './structures/TResizeSubscriber';
+import { TWindowResizeSubscriber } from './structures/TWindowResizeSubscriber';
 
 class ResizeService {
 
@@ -31,7 +31,7 @@ class ResizeService {
     }
 
     public subscribeToWindow(element: HTMLElement, callback: () => void): void {
-        window.addEventListener("resize", callback);
+        window.addEventListener('resize', callback);
         const subscriber: TWindowResizeSubscriber = { callback, element };
         this.windowSubscribers.push(subscriber);
     }
