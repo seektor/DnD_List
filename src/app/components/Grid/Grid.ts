@@ -32,6 +32,7 @@ export class Grid {
     private readonly translationTime: number = 200;
 
     private allowDynamicClassChange: boolean;
+    private gridItemObservers: WeakMap<HTMLElement, MutationObserver>;
     private gridItemDimensions: WeakMap<HTMLElement, TGridItemDimensions>;
     private dragState: TGridDragState | null = null;
 
@@ -39,6 +40,7 @@ export class Grid {
         this.gridScrollableElement = scrollableContainer;
         this.allowDynamicClassChange = params.allowDynamicClassChange || false;
         this.pointerEventHandler = new PointerEventHandler();
+        this.gridItemObservers = new WeakMap();
         this.gridItemDimensions = new WeakMap();
         this.bindMethods();
         this.constructComponent(container, scrollableContainer, params);
@@ -100,6 +102,17 @@ export class Grid {
         }
     }
 
+    public removeItem(index: number): void {
+        const item: HTMLElement = this.gridElement.children[index] as HTMLElement;
+        if (this.allowDynamicClassChange) {
+            this.gridItemObservers.get(item).disconnect();
+            this.gridItemObservers.delete(item);
+        }
+        this.gridItemDimensions.delete(item);
+        this.gridElement.removeChild(item);
+
+    }
+
     private getGridItemPropertiesFromStyles(item: HTMLElement, columnCount: number): TGridItemProperties {
         const computedProperties: CSSStyleDeclaration = window.getComputedStyle(item);
         const rowspanProperty: RegExpExecArray | null = /span \d/.exec(computedProperties.gridRowStart);
@@ -119,6 +132,7 @@ export class Grid {
             this.gridItemDimensions.set(item, { colspan: itemProperties.colspan, rowspan: itemProperties.rowspan });
             this.setGridItemStyles(item, itemProperties.rowspan, itemProperties.colspan);
         });
+        this.gridItemObservers.set(item, observer);
         observer.observe(classChangeElement, {
             attributes: true,
             attributeFilter: ['class']
