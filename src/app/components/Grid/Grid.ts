@@ -29,6 +29,7 @@ export class Grid {
     private placeholderElement: HTMLElement;
     private gridCalculator: GridCalculator;
     private pointerEventHandler: PointerEventHandler;
+    private readonly translationTime: number = 200;
 
     private allowDynamicClassChange: boolean;
     private gridItemDimensions: WeakMap<HTMLElement, TGridItemDimensions>;
@@ -191,12 +192,10 @@ export class Grid {
         this.dragState.draggedElementTranslations.translateX = xTranslation;
         this.dragState.draggedElementTranslations.translateY = yTranslation;
         this.setTranslation(this.dragState.draggedElement, xTranslation, yTranslation);
-        if (this.dragState.isTranslating) {
-            return;
+        if (!this.dragState.isTranslating) {
+            const gridClientCoords: TCoords = this.gridCalculator.getGridClientCoords(event.clientX, event.clientY, this.dragState.dragViewportParams.initialScrollableLeft, this.dragState.dragViewportParams.initialScrollableTop);
+            this.updateDragView(gridClientCoords);
         }
-
-        const gridClientCoords: TCoords = this.gridCalculator.getGridClientCoords(event.clientX, event.clientY, this.dragState.dragViewportParams.initialScrollableLeft, this.dragState.dragViewportParams.initialScrollableTop);
-        this.updateDragView(gridClientCoords);
         this.updateAutoScroll(event);
     }
 
@@ -279,7 +278,7 @@ export class Grid {
             }
         });
         this.dragState.isTranslating = true;
-        smoothTranslate(translations, 200, () => {
+        smoothTranslate(translations, this.translationTime, () => {
             this.dragState.isTranslating = false;
         });
         return currentItemTranslations;
@@ -291,7 +290,7 @@ export class Grid {
         return newItemList;
     }
 
-    private onDragEnd(event: SyntheticEvent): void {
+    private onDragEnd(_event: SyntheticEvent): void {
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onDragMove);
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
         this.dragState.containerScrollCallbacks && this.dragState.containerScrollCallbacks.cancel();
@@ -300,9 +299,9 @@ export class Grid {
             element: this.dragState.draggedElement,
             fromX: this.dragState.draggedElementTranslations.translateX,
             fromY: this.dragState.draggedElementTranslations.translateY,
-            toX: placeholderTranslation.translateX,
-            toY: placeholderTranslation.translateY
-        }], 200, () => this.onDragEndStable());
+            toX: placeholderTranslation.translateX + (this.dragState.dragViewportParams.initialScrollableScrollLeft - this.gridScrollableElement.scrollLeft),
+            toY: placeholderTranslation.translateY + (this.dragState.dragViewportParams.initialScrollableScrollTop - this.gridScrollableElement.scrollTop)
+        }], this.translationTime, () => this.onDragEndStable());
     }
 
     private onDragEndStable(): void {

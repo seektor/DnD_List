@@ -7,11 +7,19 @@ export function autoScroll(container: HTMLElement, horizontalIncrement: number, 
     let currentVerticalIncrement: number = verticalIncrement;
     const throttleTime: number = 16;
     let timeReference: number = throttleTime;
+    let scrollRequestReference: number;
+    let callbackRequestReference: number;
     scroll(throttleTime * 2);
     return {
-        cancel: () => isCancelled = true,
+        cancel: cancel,
         setIncrement: setIncrement,
     };
+
+    function cancel() {
+        isCancelled = true;
+        cancelAnimationFrame(scrollRequestReference);
+        cancelAnimationFrame(callbackRequestReference);
+    }
 
     function setIncrement(horizontalIncrement: number, verticalIncrement: number): void {
         currentHorizontalIncrement = horizontalIncrement;
@@ -37,10 +45,12 @@ export function autoScroll(container: HTMLElement, horizontalIncrement: number, 
             const incrementedScrollTopValue: number = container.scrollTop + currentVerticalIncrement;
             container.scrollTop = Math.min(incrementedScrollTopValue, container.scrollHeight);
             timeReference = now;
-            requestAnimationFrame(scroll);
-            onIncrementCallback && requestAnimationFrame(() => onIncrementCallback());
+            scrollRequestReference = requestAnimationFrame(scroll);
+            if (onIncrementCallback) {
+                callbackRequestReference = requestAnimationFrame(() => onIncrementCallback());
+            }
         } else {
-            requestAnimationFrame(scroll);
+            scrollRequestReference = requestAnimationFrame(scroll);
         }
     }
 
