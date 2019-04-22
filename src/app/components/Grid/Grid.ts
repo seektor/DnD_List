@@ -49,6 +49,9 @@ export class Grid {
     public dispose(): void {
         this.pointerEventHandler.flushAll();
         ResizeService.unsubscribe(this.gridScrollableElement);
+        if (this.allowDynamicClassChange) {
+            this.gridElement.childNodes.forEach((child: HTMLElement) => this.gridItemObservers.get(child).disconnect());
+        }
     }
 
     private bindMethods(): void {
