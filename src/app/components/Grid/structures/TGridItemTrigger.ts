@@ -1,6 +1,6 @@
-import { Direction } from "tty";
+import { Side } from "../../../structures/Side";
 
 export interface TGridItemTrigger {
-    element: HTMLElement;
-    side: Direction;
+    item: HTMLElement;
+    side: Side;
 }

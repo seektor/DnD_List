@@ -1,4 +1,4 @@
-export enum Direction {
+export enum Side {
     Left = "Left",
     Right = "Right"
 }

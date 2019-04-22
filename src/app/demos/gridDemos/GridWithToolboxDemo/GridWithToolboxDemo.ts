@@ -12,8 +12,8 @@ export class GridWithToolboxDemo extends AbstractGridDemo {
         columnCount: 12,
         columnGap: 30,
         rowGap: 30,
-        minColumnWidth: 120,
         watchAnyResize: false,
+        minColumnWidth: 120,
         allowDynamicClassChange: true,
     }
 
@@ -38,7 +38,7 @@ export class GridWithToolboxDemo extends AbstractGridDemo {
         const gridContainerElement: HTMLElement = ContainerFactory();
         gridSectionElement.append(gridContainerElement);
         this.load1x1Scenario(gridContainerElement, 10);
-
+        //this.loadInterlacedScenario(gridContainerElement, 10);
     }
 
     private populateToolbox(toolbox: Toolbox): void {
@@ -55,6 +55,16 @@ export class GridWithToolboxDemo extends AbstractGridDemo {
                 const item: HTMLElement = this.createClassItem(`[${rowIndex}, ${columnIndex}]`, gradientColors[columnIndex % gradientColors.length], 1, 1);
                 grid.addItemWithClass(item);
             }
+        }
+    }
+
+    private loadInterlacedScenario(containerElement: HTMLElement, itemCount: number): void {
+        const grid: Grid = new Grid(containerElement, containerElement, this.gridParams);
+        const gradientColors: string[][] = [...Utils.gradientColors.values()];
+        for (let itemIndex = 0; itemIndex < itemCount; itemIndex++) {
+            const size: number = itemIndex % 2 === 0 ? 2 : 1;
+            const item: HTMLElement = this.createClassItem(`${itemIndex}`, gradientColors[itemIndex % gradientColors.length], size, size);
+            grid.addItemWithClass(item);
         }
     }
 }

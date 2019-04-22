@@ -1,6 +1,7 @@
 import { TGridMapData } from "./TGridMapData";
 import { TTranslations } from "../../../structures/TTranslations";
 import { TGridDimensions } from "./TGridDimensions";
+import { TGridItemTrigger } from "./TGridItemTrigger";
 
 export interface TGridView {
     itemsList: HTMLElement[];
@@ -8,4 +9,5 @@ export interface TGridView {
     gridMapData: TGridMapData;
     itemTranslations: WeakMap<HTMLElement, TTranslations>;
     gridDimensions: TGridDimensions;
+    forbiddenTrigger: TGridItemTrigger;
 }

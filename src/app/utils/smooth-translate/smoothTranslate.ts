@@ -29,7 +29,6 @@ export function smoothTranslate(translations: TTranslate[], duration: number, on
             requestAnimationFrame(translate);
         } else {
             if (onEndCallback) {
-                console.log('cb');
                 requestAnimationFrame(() => onEndCallback());
             }
         }

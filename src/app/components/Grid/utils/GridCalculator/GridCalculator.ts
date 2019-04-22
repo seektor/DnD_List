@@ -6,21 +6,26 @@ import { TGridItemDimensions } from "../../structures/TGridItemDimensions";
 import { TTranslations } from "../../../../structures/TTranslations";
 import { TCoords } from "../../../../structures/TCoords";
 import { TGridView } from "../../structures/TGridView";
-import { Direction } from "../../../../structures/Direction";
+import { Side } from "../../../../structures/Side";
+import { TDragViewportParams } from "../../../List/structures/TDragViewportParams";
+import { TGridItemTrigger } from "../../structures/TGridItemTrigger";
+import { TClientRect } from "../../../../structures/TClientRect";
 
 export class GridCalculator {
 
     private readonly emptyMarker: number = -1;
     private gridElement: HTMLElement;
     private gridParentElement: HTMLElement;
+    private gridScrollableElement: HTMLElement;
     private columnCount: number;
     private columnGap: number;
     private rowGap: number;
     private minColumnWidth: number | null;
 
-    constructor(gridElement: HTMLElement, gridParentElement: HTMLElement, gridParams: TGridParams) {
+    constructor(gridElement: HTMLElement, gridParentElement: HTMLElement, gridScrollableElement: HTMLElement, gridParams: TGridParams) {
         this.gridElement = gridElement;
         this.gridParentElement = gridParentElement;
+        this.gridScrollableElement = gridScrollableElement;
         this.columnCount = gridParams.columnCount;
         this.rowGap = gridParams.rowGap;
         this.columnGap = gridParams.columnGap;
@@ -148,38 +153,61 @@ export class GridCalculator {
         }
     }
 
-    public findNewPlaceholderPosition(gridView: TGridView, gridCoords: TCoords, gridClientX: number): number {
-        let newPlaceholderPosition: number;
-        const gridMap: Int16Array[] = gridView.gridMapData.gridMap;
-        const currentItemMarker: number = gridMap[gridCoords.y][gridCoords.x];
+    public findNewPlaceholderIndex(gridView: TGridView, gridPositionCoords: TCoords, gridClientX: number, forbiddenTrigger: TGridItemTrigger): number {
+        let newPlaceholderIndex: number;
+        const currentItemMarker: number = gridView.gridMapData.gridMap[gridPositionCoords.y][gridPositionCoords.x];
         if (currentItemMarker === this.emptyMarker) {
-            const gridCoordsToTheLeft: TCoords = { x: gridCoords.x - 1, y: gridCoords.y };
-            const itemMarkerToTheLeft: number | null = this.findFirstItemMarkerUsingLeftFlow(gridMap, gridCoordsToTheLeft);
-            newPlaceholderPosition = itemMarkerToTheLeft === null ? 0 : itemMarkerToTheLeft + 1;
+            newPlaceholderIndex = this.findNewPlaceholderIndexFromLeftFlow(gridView, gridPositionCoords, gridClientX, forbiddenTrigger);
         } else {
-            const item: HTMLElement = gridView.itemsList[currentItemMarker];
-            if (currentItemMarker === gridView.placeholderIndex) {
-                newPlaceholderPosition = currentItemMarker;
-            } else {
-                const currentItemTranslations: TTranslations = gridView.itemTranslations.get(item);
-                const itemCenterX: number = item.offsetLeft + (item.offsetWidth * 0.5) + currentItemTranslations.translateX;
-                const itemSide: Direction = gridClientX < itemCenterX ? Direction.Left : Direction.Right;
-                if (itemSide === Direction.Left) {
-                    newPlaceholderPosition = currentItemMarker;
-                } else {
-                    newPlaceholderPosition = currentItemMarker + 1;
-                }
-            }
+            newPlaceholderIndex = this.findNewPlaceholderIndexFromHoveredOverElement(gridView, gridPositionCoords, gridClientX, forbiddenTrigger)
         }
-        return newPlaceholderPosition;
+        return newPlaceholderIndex;
     }
 
-    private findFirstItemMarkerUsingLeftFlow(gridMap: Int16Array[], fromCoords: TCoords): number | null {
-        const columnCount: number = gridMap[fromCoords.y].length;
+    private findNewPlaceholderIndexFromHoveredOverElement(gridView: TGridView, gridPositionCoords: TCoords, gridClientX: number, forbiddenTrigger: TGridItemTrigger): number {
+        let newPlaceholderIndex: number;
+        const currentItemMarker: number = gridView.gridMapData.gridMap[gridPositionCoords.y][gridPositionCoords.x];
+        if (currentItemMarker === gridView.placeholderIndex) {
+            newPlaceholderIndex = gridView.placeholderIndex;
+        } else {
+            const item: HTMLElement = gridView.itemsList[currentItemMarker];
+            const currentItemTranslations: TTranslations = gridView.itemTranslations.get(item);
+            const itemCenterX: number = item.offsetLeft + (item.offsetWidth * 0.5) + currentItemTranslations.translateX;
+            const itemSide: Side = gridClientX < itemCenterX ? Side.Left : Side.Right;
+            if (item === forbiddenTrigger.item && itemSide === forbiddenTrigger.side) {
+                newPlaceholderIndex = gridView.placeholderIndex;
+            } else if (itemSide === Side.Left) {
+                newPlaceholderIndex = gridView.placeholderIndex < currentItemMarker ? Math.max(0, currentItemMarker - 1) : currentItemMarker;
+            } else {
+                newPlaceholderIndex = gridView.placeholderIndex < currentItemMarker ? currentItemMarker : currentItemMarker + 1;
+            }
+        }
+        return newPlaceholderIndex;
+    }
+
+    private findNewPlaceholderIndexFromLeftFlow(gridView: TGridView, gridPositionCoords: TCoords, gridClientX: number, forbiddenTrigger: TGridItemTrigger): number {
+        let newPlaceholderIndex: number;
+        const gridCoordsToTheLeft: TCoords = { x: gridPositionCoords.x - 1, y: gridPositionCoords.y };
+        const itemMarkerToTheLeft: number | null = this.findFirstItemMarkerUsingLeftFlow(gridView.gridMapData.gridMap, gridCoordsToTheLeft);
+        const itemToTheLeft: HTMLElement = itemMarkerToTheLeft === null ? null : gridView.itemsList[itemMarkerToTheLeft];
+        if (itemMarkerToTheLeft === null) {
+            newPlaceholderIndex = 0;
+        } else {
+            if (itemToTheLeft === forbiddenTrigger.item) {
+                newPlaceholderIndex = gridView.placeholderIndex;
+            } else {
+                newPlaceholderIndex = gridView.placeholderIndex < itemMarkerToTheLeft ? itemMarkerToTheLeft : itemMarkerToTheLeft + 1;
+            }
+        }
+        return newPlaceholderIndex;
+    }
+
+    private findFirstItemMarkerUsingLeftFlow(gridMap: Int16Array[], fromPositionCoords: TCoords): number | null {
+        const columnCount: number = gridMap[fromPositionCoords.y].length;
         let itemMarker: number | null = null;
-        let currentColumnIndex: number = fromCoords.x;
+        let currentColumnIndex: number = fromPositionCoords.x;
         scanner:
-        for (let rowIndex = fromCoords.y; rowIndex >= 0; rowIndex--) {
+        for (let rowIndex = fromPositionCoords.y; rowIndex >= 0; rowIndex--) {
             for (let columnIndex = currentColumnIndex; columnIndex >= 0; columnIndex--) {
                 const currentValue: number = gridMap[rowIndex][columnIndex];
                 if (currentValue !== this.emptyMarker) {
@@ -192,7 +220,7 @@ export class GridCalculator {
         return itemMarker;
     }
 
-    public calculateGridCoords(gridClientX: number, gridClientY: number, gridDimensions: TGridDimensions): TCoords {
+    public calculateGridPositionCoords(gridClientX: number, gridClientY: number, gridDimensions: TGridDimensions): TCoords {
         let itemX: number = 0;
         let itemY: number = 0;
         let widthSum: number = gridDimensions.columnWidth + 0.5 * gridDimensions.columnGap;
@@ -211,9 +239,61 @@ export class GridCalculator {
             }
             heightSum += gridDimensions.rowHeight + gridDimensions.rowGap;
         }
-        return {
-            x: itemX,
-            y: itemY
+        return { x: itemX, y: itemY }
+    }
+
+    public calculateInitialDragViewportParams(clientX: number, clientY: number): TDragViewportParams {
+        const scrollableContainerClientRect: ClientRect = this.gridScrollableElement.getBoundingClientRect();
+        const gridElementClientRect: ClientRect = this.gridElement.getBoundingClientRect();
+        const windowWidth: number = window.innerWidth || document.body.clientWidth;
+        const windowHeight: number = window.innerHeight || document.body.clientHeight;
+        const scrollableContainerVisibleWidth: number = windowWidth - scrollableContainerClientRect.left;
+        const scrollableContainerVisibleHeight: number = windowHeight - scrollableContainerClientRect.top;
+        const visibleScrollableLeft: number = Math.max(0, scrollableContainerClientRect.left);
+        const visibleScrollableTop: number = Math.max(0, scrollableContainerClientRect.top);
+        const visibleScrollableClientRect: TClientRect = {
+            top: visibleScrollableTop,
+            bottom: Math.min(windowHeight, visibleScrollableTop + this.gridScrollableElement.clientHeight),
+            left: visibleScrollableLeft,
+            right: Math.min(windowWidth, visibleScrollableLeft + this.gridScrollableElement.clientWidth),
         }
+        return {
+            initialCoordinates: { x: clientX, y: clientY },
+            initialScrollableScrollTop: this.gridScrollableElement.scrollTop,
+            initialScrollableTop: scrollableContainerClientRect.top,
+            initialScrollableLeft: scrollableContainerClientRect.left,
+            initialScrollableScrollLeft: this.gridScrollableElement.scrollLeft,
+            initialGridLeft: gridElementClientRect.left,
+            initialGridTop: gridElementClientRect.top,
+            horizontalScrollTriggerWidth: scrollableContainerVisibleWidth * 0.1,
+            verticalScrollTriggerHeight: scrollableContainerVisibleHeight * 0.1,
+            visibleScrollableClientRect
+        }
+    }
+
+    public getGridClientCoords(clientX: number, clientY: number, initialGridLeft: number, initialGridTop: number): TCoords {
+        const gridClientX: number = this.gridScrollableElement.scrollLeft + clientX - initialGridLeft;
+        const gridClientY: number = this.gridScrollableElement.scrollTop + clientY - initialGridTop;
+        return { x: gridClientX, y: gridClientY };
+    }
+
+    public calculateForbiddenTrigger(gridMap: Int16Array[], gridClientX: number, gridPositionCoords: TCoords, itemsList: HTMLElement[], translations: WeakMap<HTMLElement, TTranslations>): TGridItemTrigger {
+        const itemMarker: number = gridMap[gridPositionCoords.y][gridPositionCoords.x];
+        let item: HTMLElement;
+        let side: Side;
+        if (itemMarker !== -1) {
+            item = itemsList[itemMarker];
+            const itemCenterX: number = item.offsetLeft + item.offsetWidth * 0.5 + translations.get(item).translateX;
+            side = gridClientX < itemCenterX ? Side.Left : Side.Right;
+        } else {
+            const leftMarker: number | null = this.findFirstItemMarkerUsingLeftFlow(gridMap, gridPositionCoords);
+            item = leftMarker === null ? itemsList[0] : itemsList[leftMarker];
+            side = leftMarker === null ? Side.Left : Side.Right;
+        }
+        return { item, side };
+    }
+
+    public isBetweenColumns(value: number, min: number, max: number): boolean {
+        return value >= min && value < max;
     }
 }

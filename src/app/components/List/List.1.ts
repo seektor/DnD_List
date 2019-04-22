@@ -3,7 +3,7 @@ import ItemAttributeHooks, { TItemFactoryAttributeHooks } from "../../viewport/F
 import { TPositionChangeData } from "./structures/TPositionChangeData";
 import { TListViewStatistics } from "./structures/TListViewStatistics";
 import { IListHandlers } from "./interfaces/IListHandlers";
-import { TInitialDragViewportParams } from "./structures/TInitialDragViewportParams";
+import { TDragViewportParams } from "./structures/TDragViewportParams";
 import { DragMode } from "./structures/DragMode";
 import { smoothScroll } from "../../utils/smooth-scroll/smoothScroll";
 import { TWriteable } from "../../structures/TWriteable";
@@ -21,7 +21,7 @@ export class List {
     private externalDraggedContentElement: HTMLElement = null;
 
     private placeholderVerticalSpaceValue: number = 0;
-    private dragStartData: TInitialDragViewportParams = null;
+    private dragStartData: TDragViewportParams = null;
     private dragMode: DragMode = DragMode.None;
     private filteredDomList: HTMLElement[] = [];
     private filteredListMap: number[] = [];
@@ -272,7 +272,7 @@ export class List {
             this.draggedElement.dispatchEvent(new TransitionEvent("transitionend"));
             return elementPulledPromise;
         }
-        let scrollTopDifference: number = this.dragStartData.initialComponentScrollTop - viewStatistics.adjustedScrollTop;
+        let scrollTopDifference: number = this.dragStartData.initialScrollableScrollTop - viewStatistics.adjustedScrollTop;
         const placeholderTranslationY: number = this.getCalculatedPlaceholderTranslationY();
         const yTranslationWithScroll: number = placeholderTranslationY + scrollTopDifference;
         const newTranslation: string = `translate(${0}px, ${yTranslationWithScroll}px)`;
@@ -301,7 +301,7 @@ export class List {
                 newScrollTop = this.listComponentElement.scrollTop - topDifference + this.placeholderVerticalSpaceValue - this.listComponentElement.clientHeight;
             }
         }
-        const hasComponentBeenScrolled: boolean = this.dragStartData.initialComponentTop !== listComponentClientRect.top;
+        const hasComponentBeenScrolled: boolean = this.dragStartData.initialScrollableTop !== listComponentClientRect.top;
         return {
             adjustedScrollTop: newScrollTop,
             isPlaceholderInFixedView: isPlaceholderInFixedView,
