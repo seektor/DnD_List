@@ -1,4 +1,4 @@
-import { Utils } from '../../../../utils/Utils';
+import { Utils } from '../../../../../common/utils/Utils';
 import ToolboxItemAttributeHooks from './structures/ToolboxItemAttributeHooks';
 
 export function ToolboxItemFactory(title: string): HTMLElement {

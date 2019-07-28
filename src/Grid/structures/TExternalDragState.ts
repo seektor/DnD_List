@@ -1,4 +1,4 @@
-import { TClientRect } from "../../../structures/TClientRect";
+import { TClientRect } from "../../common/structures/TClientRect";
 
 export interface TExternalDragState {
     visibleGridElementClientRect: TClientRect;

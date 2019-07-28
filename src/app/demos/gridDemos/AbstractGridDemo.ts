@@ -1,7 +1,7 @@
 import { ItemFactory } from '../../viewport/Factories/ItemFactory/ItemFactory';
 import ItemFactoryAttributeHooks from '../../viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks';
-import { Utils } from '../../utils/Utils';
-import GridAttributeHooks from '../../components/Grid/structures/GridAttributeHooks';
+import { Utils } from '../../../common/utils/Utils';
+import GridAttributeHooks from '../../../Grid/structures/GridAttributeHooks';
 
 export class AbstractGridDemo {
 

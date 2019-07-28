@@ -1,5 +1,5 @@
 import { TGridMapData } from "./TGridMapData";
-import { TTranslations } from "../../../structures/TTranslations";
+import { TTranslations } from "../../common/structures/TTranslations";
 import { TGridDimensions } from "./TGridDimensions";
 import { TGridItemTrigger } from "./TGridItemTrigger";
 

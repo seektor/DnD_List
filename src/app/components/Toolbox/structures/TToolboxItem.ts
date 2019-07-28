@@ -1,4 +1,4 @@
-import { IGridHandlers } from "../../Grid/interfaces/IGridHandlers";
+import { IGridHandlers } from "../../../../Grid/interfaces/IGridHandlers";
 
 export interface TToolboxItem {
     dropzoneContent: HTMLElement;

@@ -1,11 +1,11 @@
-import { TCoords } from '../../structures/TCoords';
-import { Utils } from '../../utils/Utils';
+import { TCoords } from '../../../common/structures/TCoords';
+import { Utils } from '../../../common/utils/Utils';
 import ToolboxAttributeHooks from './structures/ToolboxAttributeHooks';
 import { ToolboxItemFactory } from './factories/ToolboxItemFactory/ToolboxItemFactory';
-import { PointerEventHandler } from '../../utils/pointer-event-handler/PointerEventHandler';
-import { PointerEventType } from '../../utils/pointer-event-handler/structures/PointerEventType';
-import { IGridHandlers } from '../Grid/interfaces/IGridHandlers';
+import { PointerEventHandler } from '../../../common/utils/pointer-event-handler/PointerEventHandler';
+import { PointerEventType } from '../../../common/utils/pointer-event-handler/structures/PointerEventType';
 import { TToolboxItem } from './structures/TToolboxItem';
+import { IGridHandlers } from '../../../Grid/interfaces/IGridHandlers';
 
 export class Toolbox {
 

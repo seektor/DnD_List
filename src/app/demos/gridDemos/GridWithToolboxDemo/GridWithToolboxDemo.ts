@@ -1,10 +1,10 @@
 import { AbstractGridDemo } from '../AbstractGridDemo';
-import { Utils } from '../../../utils/Utils';
+import { Utils } from '../../../../common/utils/Utils';
 import { ContainerFactory } from '../../../Viewport/Factories/ContainerFactory/ContainerFactory';
 import { Toolbox } from '../../../components/Toolbox/Toolbox';
 import GridWithToolboxAttributeHooks from './structures/GridWithToolboxAttributeHooks';
-import { Grid } from '../../../components/Grid/Grid';
-import { TGridParams } from '../../../components/Grid/structures/TGridParams';
+import { Grid } from '../../../../Grid/Grid';
+import { TGridParams } from '../../../../Grid/structures/TGridParams';
 import { ItemFactory } from '../../../viewport/Factories/ItemFactory/ItemFactory';
 
 export class GridWithToolboxDemo extends AbstractGridDemo {

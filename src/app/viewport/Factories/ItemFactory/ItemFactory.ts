@@ -1,4 +1,4 @@
-import { Utils } from '../../../utils/Utils';
+import { Utils } from '../../../../common/utils/Utils';
 import ItemFactoryAttributeHooks from './structures/ItemFactoryAttributeHooks';
 import ItemFactoryClassHooks from './structures/ItemFactoryClassHooks';
 

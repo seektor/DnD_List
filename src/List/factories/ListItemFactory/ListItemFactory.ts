@@ -1,4 +1,4 @@
-import { Utils } from "../../../../utils/Utils";
+import { Utils } from "../../../common/utils/Utils";
 
 export function ListItemFactory(): HTMLElement {
     const listItemTemplate: string = require("./list-item-factory.tpl.html");

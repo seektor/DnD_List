@@ -1,5 +1,5 @@
-import { TCoords } from "../../../structures/TCoords";
-import { TClientRect } from "../../../structures/TClientRect";
+import { TCoords } from "../../common/structures/TCoords";
+import { TClientRect } from "../../common/structures/TClientRect";
 
 export interface TDragViewportParams {
     initialCoordinates: TCoords;

@@ -4,9 +4,9 @@
 @import "./mixins.scss";
 
 @import "../../components/Toolbox/toolbox.scss";
-@import "../../components/List/list.scss";
-@import "../../components/Grid/grid.scss";
-@import "../../components/List/templates/list-item.scss";
+@import "../../../List/list.scss";
+@import "../../../Grid/grid.scss";
+@import "../../../List/templates/list-item.scss";
 @import "../../templates/item/item.scss";
 @import "../../viewport/Header/header.scss";
 @import "../../viewport/Body/body.scss";
@@ -15,5 +15,4 @@
 @import "../../viewport/Factories/ItemFactory/item-factory.scss";
 
 @import "../../demos/ListDemo/list-demo.scss";
-@import "../../demos/gridDemos/GridDemo/grid-demo.scss";
 @import "../../demos/gridDemos/GridWithToolboxDemo/grid-with-toolbox-demo.scss";

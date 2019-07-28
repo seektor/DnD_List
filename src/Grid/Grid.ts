@@ -1,30 +1,30 @@
-import { Utils } from '../../utils/Utils';
 import { TGridParams } from './structures/TGridParams';
 import GridAttributeHooks from './structures/GridAttributeHooks';
 import { TGridItemProperties } from './structures/TGridItemProperties';
-import { TDragViewportParams } from '../List/structures/TDragViewportParams';
-import { PointerEventHandler } from '../../utils/pointer-event-handler/PointerEventHandler';
-import { PointerEventType } from '../../utils/pointer-event-handler/structures/PointerEventType';
 import { TGridItemPlacement } from './structures/TGridItemPlacement';
-import { SyntheticEvent } from '../../utils/pointer-event-handler/structures/SyntheticEvent';
-import { TTranslate } from '../../utils/smooth-translate/structures/TTranslate';
-import { smoothTranslate } from '../../utils/smooth-translate/smoothTranslate';
 import { TGridMapData } from './structures/TGridMapData';
 import { TGridDragState } from './structures/TGridDragState';
 import { TGridView } from './structures/TGridView';
 import { TGridDimensions } from './structures/TGridDimensions';
-import { TTranslations } from '../../structures/TTranslations';
-import { TCoords } from '../../structures/TCoords';
-import { autoScroll } from '../../utils/auto-scroll/autoScroll';
-import ResizeService from '../../services/resizeService/ResizeService';
 import { GridCalculator } from './utils/GridCalculator/GridCalculator';
 import { TGridItemDimensions } from './structures/TGridItemDimensions';
 import { TGridItemTrigger } from './structures/TGridItemTrigger';
-import { Side } from '../../structures/Side';
 import { IGridHandlers } from './interfaces/IGridHandlers';
 import GridClassHooks from './structures/GridClassHooks';
 import { TExternalDragState } from './structures/TExternalDragState';
-import { TClientRect } from '../../structures/TClientRect';
+import { PointerEventHandler } from '../common/utils/pointer-event-handler/PointerEventHandler';
+import ResizeService from '../common/services/resizeService/ResizeService';
+import { Utils } from '../common/utils/Utils';
+import { PointerEventType } from '../common/utils/pointer-event-handler/structures/PointerEventType';
+import { SyntheticEvent } from '../common/utils/pointer-event-handler/structures/SyntheticEvent';
+import { TDragViewportParams } from '../List/structures/TDragViewportParams';
+import { TTranslations } from '../common/structures/TTranslations';
+import { Side } from './structures/Side';
+import { TCoords } from '../common/structures/TCoords';
+import { autoScroll } from '../common/utils/auto-scroll/autoScroll';
+import { TTranslate } from '../common/utils/smooth-translate/structures/TTranslate';
+import { smoothTranslate } from '../common/utils/smooth-translate/smoothTranslate';
+import { TClientRect } from '../common/structures/TClientRect';
 
 export class Grid {
 
@@ -192,12 +192,12 @@ export class Grid {
         if (this.dragState) {
             return;
         };
-        this.pointerEventHandler.addEventListener(document, PointerEventType.ActionShot, this.onActionShot);
+        this.pointerEventHandler.addEventListener(document, PointerEventType.ActionClickTap, this.onActionShot);
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionMove, this.onDragStart);
     }
 
     private onActionShot(_event: SyntheticEvent): void {
-        this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionShot, this.onActionShot);
+        this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionClickTap, this.onActionShot);
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onDragStart);
     }
 
