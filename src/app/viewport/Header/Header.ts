@@ -9,10 +9,8 @@ export class Header {
 
     constructor(container: HTMLElement) {
         this.constructComponent(container);
-        this.addNavbarItem('List', () => this.setActiveItem(0));
-        this.addNavbarItem('External List', () => this.setActiveItem(1));
-        this.addNavbarItem('Grid', () => this.setActiveItem(2));
-        this.addNavbarItem('External Grid', () => this.setActiveItem(3));
+        // this.addNavbarItem('List', () => this.setActiveItem(0));
+        this.addNavbarItem('Grid', () => this.setActiveItem(0));
         this.setActiveItem(0);
     }
 

@@ -2,16 +2,26 @@
     cursor: grab;
     text-transform: uppercase;
     height: 35px;
-    width: 90%;
-    margin: auto;
-    font-size: 14px;
-    line-height: 35px;
-    text-align: center;
-    font-weight: bold;
-    border-radius: 2px;
-    color: $primary--light;
-    border: 2px solid $primary--light;
+    color: $primary;
+    border-bottom: 1px solid $primary;
     background-color: white;
-    margin-bottom: 8px;
     user-select: none;
+    display: flex;
+    margin: 10px;
+
+    &:hover {
+        background-color: #dfebf9;
+        transition: all 0.5s;
+    }
+
+    &__icon {
+        height: 17px;
+        padding: 9px;
+    }
+
+    &__text {
+        font-size: 14px;
+        font-weight: bold;
+        line-height: 36px;
+    }
 }

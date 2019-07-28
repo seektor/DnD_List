@@ -1,20 +1,19 @@
 .header {
     $height: 60px;
     display: flex;
-    background-color: $primary--dark;
+    background-color: $primary;
     color: white;
     height: $height;
     line-height: $height;
-    box-shadow: 0 2px 4px rgba(0,0,0,.5);
     z-index: 10;
 
     &__title {
         height: $height;
         margin: 0px 40px;
         text-transform: uppercase;
-        letter-spacing: 2px;
+        letter-spacing: 1px;
         font-weight: bold;
-        font-size: 19px;
+        font-size: 25px;
         flex-grow: 1;
     }
 

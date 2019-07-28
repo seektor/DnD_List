@@ -47,7 +47,8 @@ export class GridWithToolboxDemo extends AbstractGridDemo {
     private populateToolbox(toolbox: Toolbox, grid: Grid): void {
         const darkItem: HTMLElement = this.createPureDarkItem('Toolbox Item');
         darkItem.classList.add(...this.createClassNames(2, 2));
-        toolbox.addItem('Dark', darkItem, grid.getGridHandlers());
+        toolbox.addItem('Note 1', darkItem, grid.getGridHandlers());
+        toolbox.addItem('Note 2', darkItem, grid.getGridHandlers());
         // toolbox.addItem("Inverted");
         // toolbox.addItem("Image");
     }
