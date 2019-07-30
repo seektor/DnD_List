@@ -1,7 +1,7 @@
 import { MouseEventCallback, SyntheticEventCallback, TouchEventCallback } from './structures/EventCallbacks';
 import { PointerEventsMap } from './structures/PointerEventsMap';
 import { PointerEventsMapCallbacks } from './structures/PointerEventsMapCallback';
-import { PointerEventType, BasePointerEventType } from './structures/PointerEventType';
+import { BasePointerEventType, PointerEventType } from './structures/PointerEventType';
 import { SyntheticEvent } from './structures/SyntheticEvent';
 
 export class PointerEventHandler {
@@ -69,6 +69,8 @@ export class PointerEventHandler {
         return {
             clientX: null,
             clientY: null,
+            pageX: null,
+            pageY: null,
             currentTarget: null,
             stopPropagation: null,
             target: null,
@@ -231,6 +233,8 @@ export class PointerEventHandler {
         this.nullifyEvent(this.syntheticEvent);
         this.syntheticEvent.clientX = e.clientX;
         this.syntheticEvent.clientY = e.clientY;
+        this.syntheticEvent.pageX = e.pageX;
+        this.syntheticEvent.pageY = e.pageY;
         this.syntheticEvent.currentTarget = e.currentTarget;
         this.syntheticEvent.stopPropagation = e.stopPropagation.bind(e);
         this.syntheticEvent.target = e.target;
@@ -241,6 +245,8 @@ export class PointerEventHandler {
         this.nullifyEvent(this.syntheticEvent);
         this.syntheticEvent.clientX = e.touches[0].clientX;
         this.syntheticEvent.clientY = e.touches[0].clientY;
+        this.syntheticEvent.pageX = e.touches[0].pageX;
+        this.syntheticEvent.pageY = e.touches[0].pageY;
         this.syntheticEvent.currentTarget = e.currentTarget;
         this.syntheticEvent.stopPropagation = e.stopPropagation.bind(e);
         this.syntheticEvent.target = e.target;
