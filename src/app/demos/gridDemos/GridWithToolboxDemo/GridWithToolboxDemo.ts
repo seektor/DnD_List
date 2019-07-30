@@ -1,11 +1,10 @@
-import { AbstractGridDemo } from '../AbstractGridDemo';
 import { Utils } from '../../../../common/utils/Utils';
-import { ContainerFactory } from '../../../Viewport/Factories/ContainerFactory/ContainerFactory';
-import { Toolbox } from '../../../components/Toolbox/Toolbox';
-import GridWithToolboxAttributeHooks from './structures/GridWithToolboxAttributeHooks';
 import { Grid } from '../../../../Grid/Grid';
 import { TGridParams } from '../../../../Grid/structures/TGridParams';
-import { ItemFactory } from '../../../viewport/Factories/ItemFactory/ItemFactory';
+import { Toolbox } from '../../../components/Toolbox/Toolbox';
+import { ContainerFactory } from '../../../Viewport/Factories/ContainerFactory/ContainerFactory';
+import { AbstractGridDemo } from '../AbstractGridDemo';
+import GridWithToolboxAttributeHooks from './structures/GridWithToolboxAttributeHooks';
 
 export class GridWithToolboxDemo extends AbstractGridDemo {
 
@@ -47,10 +46,8 @@ export class GridWithToolboxDemo extends AbstractGridDemo {
     private populateToolbox(toolbox: Toolbox, grid: Grid): void {
         const darkItem: HTMLElement = this.createPureDarkItem('Toolbox Item');
         darkItem.classList.add(...this.createClassNames(2, 2));
-        toolbox.addItem('Note 1', darkItem, grid.getGridHandlers());
-        toolbox.addItem('Note 2', darkItem, grid.getGridHandlers());
-        // toolbox.addItem("Inverted");
-        // toolbox.addItem("Image");
+        // toolbox.addItem('Note 1', darkItem, grid.getGridHandlers());
+        // toolbox.addItem('Note 2', darkItem, grid.getGridHandlers());
     }
 
     private load1x1Scenario(containerElement: HTMLElement, rowCount: number): Grid {
@@ -61,17 +58,6 @@ export class GridWithToolboxDemo extends AbstractGridDemo {
                 const item: HTMLElement = this.createClassItem(`[${rowIndex}, ${columnIndex}]`, gradientColors[columnIndex % gradientColors.length], 1, 1);
                 grid.addItemWithClass(item);
             }
-        }
-        return grid;
-    }
-
-    private loadInterlacedScenario(containerElement: HTMLElement, itemCount: number): Grid {
-        const grid: Grid = new Grid(containerElement, containerElement, this.gridParams);
-        const gradientColors: string[][] = [...Utils.gradientColors.values()];
-        for (let itemIndex = 0; itemIndex < itemCount; itemIndex++) {
-            const size: number = itemIndex % 2 === 0 ? 2 : 1;
-            const item: HTMLElement = this.createClassItem(`${itemIndex}`, gradientColors[itemIndex % gradientColors.length], size, size);
-            grid.addItemWithClass(item);
         }
         return grid;
     }

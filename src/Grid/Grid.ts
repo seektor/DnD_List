@@ -1,5 +1,4 @@
 import ResizeService from '../common/services/resizeService/ResizeService';
-import { TClientRect } from '../common/structures/TClientRect';
 import { TCoords } from '../common/structures/TCoords';
 import { TTranslations } from '../common/structures/TTranslations';
 import { autoScroll } from '../common/utils/auto-scroll/autoScroll';
@@ -10,9 +9,7 @@ import { smoothTranslate } from '../common/utils/smooth-translate/smoothTranslat
 import { TTranslate } from '../common/utils/smooth-translate/structures/TTranslate';
 import { Utils } from '../common/utils/Utils';
 import { TDragViewportParams } from '../List/structures/TDragViewportParams';
-import { IGridHandlers } from './interfaces/IGridHandlers';
 import GridAttributeHooks from './structures/GridAttributeHooks';
-import GridClassHooks from './structures/GridClassHooks';
 import { Side } from './structures/Side';
 import { TExternalDragState } from './structures/TExternalDragState';
 import { TGridDimensions } from './structures/TGridDimensions';
@@ -53,21 +50,25 @@ export class Grid {
     }
 
     public dispose(): void {
-        this.pointerEventHandler.flushAll();
         ResizeService.unsubscribe(this.gridScrollableElement);
+        this.clear();
+    }
+
+    public clear(): void {
+        this.pointerEventHandler.flushAll();
         if (this.allowDynamicClassChange) {
-            this.gridElement.childNodes.forEach((child: HTMLElement) => this.gridItemObservers.get(child).disconnect());
+            Array.from(this.gridElement.children)
+                .forEach((child: HTMLElement) => this.gridItemObservers.get(child).disconnect());
         }
+        this.gridElement.innerHTML = '';
     }
 
     private bindMethods(): void {
         this.onActionStart = this.onActionStart.bind(this);
-        this.onActionShot = this.onActionShot.bind(this);
+        this.onActionClickTap = this.onActionClickTap.bind(this);
         this.onDragStart = this.onDragStart.bind(this);
         this.onDragMove = this.onDragMove.bind(this);
         this.onDragEnd = this.onDragEnd.bind(this);
-        this.onExternalDragMove = this.onExternalDragMove.bind(this);
-        this.onExternalDragEnd = this.onExternalDragEnd.bind(this);
     }
 
     private setGridTemplateColumns(): void {
@@ -177,16 +178,16 @@ export class Grid {
         }
     }
 
-    private onActionStart(event: SyntheticEvent): void {
+    private onActionStart(_event: SyntheticEvent): void {
         if (this.dragState) {
             return;
         };
-        this.pointerEventHandler.addEventListener(document, PointerEventType.ActionClickTap, this.onActionShot);
+        this.pointerEventHandler.addEventListener(document, PointerEventType.ActionClickTap, this.onActionClickTap);
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionMove, this.onDragStart);
     }
 
-    private onActionShot(_event: SyntheticEvent): void {
-        this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionClickTap, this.onActionShot);
+    private onActionClickTap(_event: SyntheticEvent): void {
+        this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionClickTap, this.onActionClickTap);
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onDragStart);
     }
 
@@ -227,7 +228,7 @@ export class Grid {
             const newItemList: HTMLElement[] = GridUtils.getReorderedItemList(this.dragState.gridView.itemsList, previousPlaceholderIndex, newPlaceholderIndex);
             const newGridMapData: TGridMapData = this.gridCalculator.createGridMapData(newItemList, this.gridItemDimensions);
             const newGridDimensions: TGridDimensions = this.gridCalculator.calculateGridDimensions(newGridMapData.gridMap, this.dragState.gridView.gridDimensions);
-            const newItemTranslations: WeakMap<HTMLElement, TTranslations> = this.createAnimations(this.dragState.gridView, newItemList, newGridMapData, newGridDimensions);
+            const newItemTranslations: WeakMap<HTMLElement, TTranslations> = this.createItemAnimations(this.dragState.gridView, newItemList, newGridMapData, newGridDimensions);
             const newForbiddenTrigger: TGridItemTrigger = this.gridCalculator.calculateForbiddenTrigger(newGridMapData.gridMap, gridClientCoords.x, gridPositionCoords, newItemList, newItemTranslations);
             this.dragState.gridView = {
                 itemsList: newItemList,
@@ -271,7 +272,7 @@ export class Grid {
         }
     }
 
-    private createAnimations(previousGridView: TGridView, currentItemsList: HTMLElement[], currentGridMapData: TGridMapData, currentGridDimensions: TGridDimensions): WeakMap<HTMLElement, TTranslations> {
+    private createItemAnimations(previousGridView: TGridView, currentItemsList: HTMLElement[], currentGridMapData: TGridMapData, currentGridDimensions: TGridDimensions): WeakMap<HTMLElement, TTranslations> {
         let translations: TTranslate[] = [];
         const currentItemTranslations: WeakMap<HTMLElement, TTranslations> = new WeakMap();
         currentItemsList.forEach((item) => {
@@ -390,53 +391,4 @@ export class Grid {
     private getClosestGridItem(fromElement: HTMLElement): HTMLElement | null {
         return fromElement.closest(`[${GridAttributeHooks.item}]`) as HTMLElement;
     }
-
-    private toggleDropzone(isEnabled: boolean): void {
-        if (isEnabled) {
-            this.gridElement.classList.add(GridClassHooks.highlighted);
-        } else {
-            this.gridElement.classList.remove(GridClassHooks.highlighted);
-        }
-    }
-
-    private onExternalDragStart(externalDraggedElement: HTMLElement, itemContentElement: HTMLElement): void {
-        this.externalDragState = {
-            visibleGridElementClientRect: this.gridCalculator.calculateVisibleGridElementClientRect(),
-            itemContent: itemContentElement
-        };
-        this.pointerEventHandler.addEventListener(document, PointerEventType.ActionEnd, this.onExternalDragEnd);
-    }
-
-    private onExternalDragEnd(event: SyntheticEvent): void {
-        this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionEnd, this.onExternalDragEnd);
-        this.toggleExternalAccessListener(false);
-        if (this.isInClientRectRange(event.clientX, event.clientY, this.externalDragState.visibleGridElementClientRect)) {
-            this.addItemWithClass(this.externalDragState.itemContent);
-        }
-        this.externalDragState = null;
-    }
-
-    private toggleExternalAccessListener(isEnabled: boolean): void {
-        if (isEnabled) {
-            this.pointerEventHandler.addEventListener(document, PointerEventType.ActionMove, this.onExternalDragMove);
-        } else {
-            this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onExternalDragMove);
-        }
-    }
-
-    private onExternalDragMove(event: SyntheticEvent): void {
-        // console.log(this.isInClientRectRange(event.clientX, event.clientY, this.externalDragState.visibleGridElementClientRect));
-    }
-
-    private isInClientRectRange(clientX: number, clientY: number, clientRect: TClientRect): boolean {
-        return clientRect.left <= clientX && clientRect.right >= clientX && clientRect.top <= clientY && clientRect.bottom >= clientY;
-    }
-
-    public getGridHandlers(): IGridHandlers {
-        return {
-            toggleDropzone: (isEnabled) => this.toggleDropzone(isEnabled),
-            onExternalDragStart: (externalDraggedElement, itemContentElement) => this.onExternalDragStart(externalDraggedElement, itemContentElement)
-        }
-    }
-
 }

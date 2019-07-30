@@ -5,6 +5,7 @@
     color: white;
     height: $height;
     line-height: $height;
+    box-shadow: 0 6px 6px 0 rgba(0, 0, 0, 0.2);
     z-index: 10;
 
     &__title {
