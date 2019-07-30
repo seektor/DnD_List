@@ -1,15 +1,15 @@
-import { TGridParams } from '../../structures/TGridParams';
-import { TGridDimensions } from '../../structures/TGridDimensions';
-import { TGridMapData } from '../../structures/TGridMapData';
-import { TGridItemPlacement } from '../../structures/TGridItemPlacement';
-import { TGridItemDimensions } from '../../structures/TGridItemDimensions';
-import { TTranslations } from '../../../common/structures/TTranslations';
-import { TCoords } from '../../../common/structures/TCoords';
-import { TGridView } from '../../structures/TGridView';
-import { Side } from '../../structures/Side';
-import { TDragViewportParams } from '../../../List/structures/TDragViewportParams';
-import { TGridItemTrigger } from '../../structures/TGridItemTrigger';
 import { TClientRect } from '../../../common/structures/TClientRect';
+import { TCoords } from '../../../common/structures/TCoords';
+import { TTranslations } from '../../../common/structures/TTranslations';
+import { TDragViewportParams } from '../../../List/structures/TDragViewportParams';
+import { Side } from '../../structures/Side';
+import { TGridDimensions } from '../../structures/TGridDimensions';
+import { TGridItemDimensions } from '../../structures/TGridItemDimensions';
+import { TGridItemPlacement } from '../../structures/TGridItemPlacement';
+import { TGridItemTrigger } from '../../structures/TGridItemTrigger';
+import { TGridMapData } from '../../structures/TGridMapData';
+import { TGridParams } from '../../structures/TGridParams';
+import { TGridView } from '../../structures/TGridView';
 
 export class GridCalculator {
 
@@ -305,9 +305,5 @@ export class GridCalculator {
             side = leftMarker === null ? Side.Left : Side.Right;
         }
         return { item, side };
-    }
-
-    public isBetweenColumns(value: number, min: number, max: number): boolean {
-        return value >= min && value < max;
     }
 }

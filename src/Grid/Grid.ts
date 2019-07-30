@@ -1,30 +1,31 @@
-import { TGridParams } from './structures/TGridParams';
-import GridAttributeHooks from './structures/GridAttributeHooks';
-import { TGridItemProperties } from './structures/TGridItemProperties';
-import { TGridItemPlacement } from './structures/TGridItemPlacement';
-import { TGridMapData } from './structures/TGridMapData';
-import { TGridDragState } from './structures/TGridDragState';
-import { TGridView } from './structures/TGridView';
-import { TGridDimensions } from './structures/TGridDimensions';
-import { GridCalculator } from './utils/GridCalculator/GridCalculator';
-import { TGridItemDimensions } from './structures/TGridItemDimensions';
-import { TGridItemTrigger } from './structures/TGridItemTrigger';
-import { IGridHandlers } from './interfaces/IGridHandlers';
-import GridClassHooks from './structures/GridClassHooks';
-import { TExternalDragState } from './structures/TExternalDragState';
-import { PointerEventHandler } from '../common/utils/pointer-event-handler/PointerEventHandler';
 import ResizeService from '../common/services/resizeService/ResizeService';
-import { Utils } from '../common/utils/Utils';
+import { TClientRect } from '../common/structures/TClientRect';
+import { TCoords } from '../common/structures/TCoords';
+import { TTranslations } from '../common/structures/TTranslations';
+import { autoScroll } from '../common/utils/auto-scroll/autoScroll';
+import { PointerEventHandler } from '../common/utils/pointer-event-handler/PointerEventHandler';
 import { PointerEventType } from '../common/utils/pointer-event-handler/structures/PointerEventType';
 import { SyntheticEvent } from '../common/utils/pointer-event-handler/structures/SyntheticEvent';
-import { TDragViewportParams } from '../List/structures/TDragViewportParams';
-import { TTranslations } from '../common/structures/TTranslations';
-import { Side } from './structures/Side';
-import { TCoords } from '../common/structures/TCoords';
-import { autoScroll } from '../common/utils/auto-scroll/autoScroll';
-import { TTranslate } from '../common/utils/smooth-translate/structures/TTranslate';
 import { smoothTranslate } from '../common/utils/smooth-translate/smoothTranslate';
-import { TClientRect } from '../common/structures/TClientRect';
+import { TTranslate } from '../common/utils/smooth-translate/structures/TTranslate';
+import { Utils } from '../common/utils/Utils';
+import { TDragViewportParams } from '../List/structures/TDragViewportParams';
+import { IGridHandlers } from './interfaces/IGridHandlers';
+import GridAttributeHooks from './structures/GridAttributeHooks';
+import GridClassHooks from './structures/GridClassHooks';
+import { Side } from './structures/Side';
+import { TExternalDragState } from './structures/TExternalDragState';
+import { TGridDimensions } from './structures/TGridDimensions';
+import { TGridDragState } from './structures/TGridDragState';
+import { TGridItemDimensions } from './structures/TGridItemDimensions';
+import { TGridItemPlacement } from './structures/TGridItemPlacement';
+import { TGridItemProperties } from './structures/TGridItemProperties';
+import { TGridItemTrigger } from './structures/TGridItemTrigger';
+import { TGridMapData } from './structures/TGridMapData';
+import { TGridParams } from './structures/TGridParams';
+import { TGridView } from './structures/TGridView';
+import { GridCalculator } from './utils/GridCalculator/GridCalculator';
+import { GridUtils } from './utils/GridUtils/GridUtils';
 
 export class Grid {
 
@@ -104,7 +105,7 @@ export class Grid {
     public addItemWithClass(content: HTMLElement): void {
         const item: HTMLElement = this.createItem(content);
         this.gridElement.append(item);
-        const itemProperties: TGridItemProperties = this.getGridItemPropertiesFromStyles(content, this.gridCalculator.getColumnCount());
+        const itemProperties: TGridItemProperties = GridUtils.getGridItemPropertiesFromStyles(content, this.gridCalculator.getColumnCount());
         this.gridItemDimensions.set(item, { colspan: itemProperties.colspan, rowspan: itemProperties.rowspan });
         this.setGridItemStyles(item, itemProperties.rowspan, itemProperties.colspan);
         if (this.allowDynamicClassChange) {
@@ -123,22 +124,10 @@ export class Grid {
 
     }
 
-    private getGridItemPropertiesFromStyles(item: HTMLElement, columnCount: number): TGridItemProperties {
-        const computedProperties: CSSStyleDeclaration = window.getComputedStyle(item);
-        const rowspanProperty: RegExpExecArray | null = /span \d/.exec(computedProperties.gridRowStart);
-        const colspanProperty: RegExpExecArray | null = /span \d/.exec(computedProperties.gridColumnStart);
-        const rowspan: number = rowspanProperty === null ? 1 : parseInt(rowspanProperty[0].split(' ')[1]);
-        const colspan: number = colspanProperty === null ? 1 : Math.min(parseInt(colspanProperty[0].split(' ')[1]), columnCount);
-        return {
-            colspan: colspan,
-            rowspan: rowspan,
-        }
-    }
-
     private setClassObserver(item: HTMLElement): void {
         const classChangeElement: HTMLElement = item.firstElementChild as HTMLElement;
         const observer: MutationObserver = new MutationObserver((_mutations: MutationRecord[]) => {
-            const itemProperties: TGridItemProperties = this.getGridItemPropertiesFromStyles(classChangeElement as HTMLElement, this.gridCalculator.getColumnCount());
+            const itemProperties: TGridItemProperties = GridUtils.getGridItemPropertiesFromStyles(classChangeElement as HTMLElement, this.gridCalculator.getColumnCount());
             this.gridItemDimensions.set(item, { colspan: itemProperties.colspan, rowspan: itemProperties.rowspan });
             this.setGridItemStyles(item, itemProperties.rowspan, itemProperties.colspan);
         });
@@ -235,7 +224,7 @@ export class Grid {
         const previousPlaceholderIndex: number = this.dragState.gridView.placeholderIndex;
         const newPlaceholderIndex: number = this.gridCalculator.findNewPlaceholderIndex(this.dragState.gridView, gridPositionCoords, gridClientCoords.x, this.dragState.gridView.forbiddenTrigger);
         if (previousPlaceholderIndex !== newPlaceholderIndex) {
-            const newItemList: HTMLElement[] = this.getReorderedItemList(this.dragState.gridView.itemsList, previousPlaceholderIndex, newPlaceholderIndex);
+            const newItemList: HTMLElement[] = GridUtils.getReorderedItemList(this.dragState.gridView.itemsList, previousPlaceholderIndex, newPlaceholderIndex);
             const newGridMapData: TGridMapData = this.gridCalculator.createGridMapData(newItemList, this.gridItemDimensions);
             const newGridDimensions: TGridDimensions = this.gridCalculator.calculateGridDimensions(newGridMapData.gridMap, this.dragState.gridView.gridDimensions);
             const newItemTranslations: WeakMap<HTMLElement, TTranslations> = this.createAnimations(this.dragState.gridView, newItemList, newGridMapData, newGridDimensions);
@@ -256,16 +245,16 @@ export class Grid {
 
         const scrollStepReducer: number = 0.1;
         let horizontalIncrement: number | null = null;
-        if (this.gridCalculator.isBetweenColumns(event.clientX, visibleScrollableClientRect.left, visibleScrollableClientRect.left + horizontalScrollTriggerWidth)) {
+        if (GridUtils.isBetweenColumns(event.clientX, visibleScrollableClientRect.left, visibleScrollableClientRect.left + horizontalScrollTriggerWidth)) {
             horizontalIncrement = -(horizontalScrollTriggerWidth - (event.clientX - visibleScrollableClientRect.left)) * scrollStepReducer;
-        } else if (this.gridCalculator.isBetweenColumns(event.clientX, visibleScrollableClientRect.right - horizontalScrollTriggerWidth, visibleScrollableClientRect.right)) {
+        } else if (GridUtils.isBetweenColumns(event.clientX, visibleScrollableClientRect.right - horizontalScrollTriggerWidth, visibleScrollableClientRect.right)) {
             horizontalIncrement = (horizontalScrollTriggerWidth - (visibleScrollableClientRect.right - event.clientX)) * scrollStepReducer;
         }
 
         let verticalIncrement: number | null = null;
-        if (this.gridCalculator.isBetweenColumns(event.clientY, visibleScrollableClientRect.top, visibleScrollableClientRect.top + verticalScrollTriggerHeight)) {
+        if (GridUtils.isBetweenColumns(event.clientY, visibleScrollableClientRect.top, visibleScrollableClientRect.top + verticalScrollTriggerHeight)) {
             verticalIncrement = -(verticalScrollTriggerHeight - (event.clientY - visibleScrollableClientRect.top)) * scrollStepReducer;
-        } else if (this.gridCalculator.isBetweenColumns(event.clientY, visibleScrollableClientRect.bottom - verticalScrollTriggerHeight, visibleScrollableClientRect.bottom)) {
+        } else if (GridUtils.isBetweenColumns(event.clientY, visibleScrollableClientRect.bottom - verticalScrollTriggerHeight, visibleScrollableClientRect.bottom)) {
             verticalIncrement = (verticalScrollTriggerHeight - (visibleScrollableClientRect.bottom - event.clientY)) * scrollStepReducer;
         }
 
@@ -315,12 +304,6 @@ export class Grid {
         return currentItemTranslations;
     }
 
-    private getReorderedItemList(itemList: HTMLElement[], previousPlaceholderIndex: number, newPlaceholderIndex: number): HTMLElement[] {
-        const newItemList: HTMLElement[] = [...itemList];
-        Utils.moveItemInArray(newItemList, previousPlaceholderIndex, newPlaceholderIndex);
-        return newItemList;
-    }
-
     private onDragEnd(_event: SyntheticEvent): void {
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onDragMove);
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
@@ -332,10 +315,10 @@ export class Grid {
             fromY: this.dragState.draggedElementTranslations.translateY,
             toX: placeholderTranslation.translateX + (this.dragState.dragViewportParams.initialScrollableScrollLeft - this.gridScrollableElement.scrollLeft),
             toY: placeholderTranslation.translateY + (this.dragState.dragViewportParams.initialScrollableScrollTop - this.gridScrollableElement.scrollTop)
-        }], this.translationTime, () => this.onDragEndStable());
+        }], this.translationTime, () => this.onDragEndStatic());
     }
 
-    private onDragEndStable(): void {
+    private onDragEndStatic(): void {
         this.gridElement.removeChild(this.placeholderElement);
         this.removePlaceholderStyles();
         const fromIndex: number = this.dragState.originalDragItemsList.indexOf(this.placeholderElement);
@@ -357,7 +340,7 @@ export class Grid {
     }
 
     private setPlaceholderStyles(mirrorGridItem: HTMLElement): void {
-        const itemProperties: TGridItemProperties = this.getGridItemPropertiesFromStyles(mirrorGridItem, this.gridCalculator.getColumnCount());
+        const itemProperties: TGridItemProperties = GridUtils.getGridItemPropertiesFromStyles(mirrorGridItem, this.gridCalculator.getColumnCount());
         this.gridItemDimensions.set(this.placeholderElement, { colspan: itemProperties.colspan, rowspan: itemProperties.rowspan });
         this.placeholderElement.style.width = `${mirrorGridItem.offsetWidth}px`;
         this.placeholderElement.style.height = `${mirrorGridItem.offsetHeight}px`;
