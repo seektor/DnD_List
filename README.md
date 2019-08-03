@@ -12,3 +12,6 @@ Items are being added to the grid by providing the html content with the `gridRo
 Normally the columns take 1fr as its width. However the min width can be provided via the constructor.
 
 Toolbox allows adding new items dynamically by dragging the proper item to the grid area where it changees its representation according to the template provided.
+
+## List
+Coming soon... has to be rewritten.
