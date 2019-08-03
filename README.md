@@ -1,5 +1,7 @@
 # DnD Playground
 
+http://krzysztoflukawski.com/dnd/
+
 ## Grid
 Grid with the abillity to reorder its items by dragging and dropping each of the elements in a different spot. The grid is built using the css grid. Therefore the 'packing algorithm' mirrors its implementation.
 
