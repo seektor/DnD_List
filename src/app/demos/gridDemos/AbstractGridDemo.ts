@@ -1,7 +1,7 @@
-import { ItemFactory } from '../../viewport/Factories/ItemFactory/ItemFactory';
-import ItemFactoryAttributeHooks from '../../viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks';
 import { Utils } from '../../../common/utils/Utils';
 import GridAttributeHooks from '../../../Grid/structures/GridAttributeHooks';
+import { ItemFactory } from '../../viewport/Factories/ItemFactory/ItemFactory';
+import ItemFactoryAttributeHooks from '../../viewport/Factories/ItemFactory/structures/ItemFactoryAttributeHooks';
 
 export class AbstractGridDemo {
 
@@ -15,6 +15,15 @@ export class AbstractGridDemo {
 
     protected createPureDarkItem(text: string): HTMLElement {
         const item: HTMLElement = ItemFactory.DarkItemWithText(text);
+        const itemHeader: HTMLElement = Utils.getElementByAttribute(item, ItemFactoryAttributeHooks.header);
+        itemHeader.setAttribute(GridAttributeHooks.itemDragAnchor, '');
+        itemHeader.style.cursor = 'grab';
+        return item;
+    }
+
+    protected createItemWithInput(): HTMLElement {
+        const headerColor: string = Utils.getRandomColor();
+        const item: HTMLElement = ItemFactory.ItemWithInput('', headerColor);
         const itemHeader: HTMLElement = Utils.getElementByAttribute(item, ItemFactoryAttributeHooks.header);
         itemHeader.setAttribute(GridAttributeHooks.itemDragAnchor, '');
         itemHeader.style.cursor = 'grab';

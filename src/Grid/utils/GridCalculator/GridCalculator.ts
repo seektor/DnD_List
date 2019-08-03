@@ -1,5 +1,5 @@
-import { TClientRect } from '../../../common/structures/TClientRect';
 import { TCoords } from '../../../common/structures/TCoords';
+import { TDomRect } from '../../../common/structures/TDomRect';
 import { TTranslations } from '../../../common/structures/TTranslations';
 import { TDragViewportParams } from '../../../List/structures/TDragViewportParams';
 import { Side } from '../../structures/Side';
@@ -220,6 +220,19 @@ export class GridCalculator {
         return itemMarker;
     }
 
+    public findIndexToInsert(gridMap: Int16Array[], itemsList: HTMLElement[], gridClientX: number, positionCoords: TCoords): number {
+        if (itemsList.length === 0) {
+            return 0;
+        }
+        const closestItemMarker: number | null = this.findFirstItemMarkerUsingLeftFlow(gridMap, positionCoords);
+        if (closestItemMarker === null) {
+            return 0;
+        }
+        const item: HTMLElement = itemsList[closestItemMarker];
+        const itemCenterX: number = item.offsetLeft + item.offsetWidth * 0.5;
+        return gridClientX < itemCenterX ? closestItemMarker : closestItemMarker + 1;
+    }
+
     public calculateGridPositionCoords(gridClientX: number, gridClientY: number, gridDimensions: TGridDimensions): TCoords {
         let gridX: number = 0;
         let gridY: number = 0;
@@ -251,11 +264,13 @@ export class GridCalculator {
         const scrollableContainerVisibleHeight: number = windowHeight - scrollableContainerClientRect.top;
         const visibleScrollableLeft: number = Math.max(0, scrollableContainerClientRect.left);
         const visibleScrollableTop: number = Math.max(0, scrollableContainerClientRect.top);
-        const visibleScrollableClientRect: TClientRect = {
+        const visibleScrollableClientRect: TDomRect = {
             top: visibleScrollableTop,
             bottom: Math.min(windowHeight, visibleScrollableTop + this.gridScrollableElement.clientHeight),
             left: visibleScrollableLeft,
             right: Math.min(windowWidth, visibleScrollableLeft + this.gridScrollableElement.clientWidth),
+            height: scrollableContainerClientRect.height,
+            width: scrollableContainerClientRect.width
         }
         return {
             initialCoordinates: { x: clientX, y: clientY },
@@ -271,7 +286,7 @@ export class GridCalculator {
         }
     }
 
-    public calculateVisibleGridElementClientRect(): TClientRect {
+    public calculateVisibleGridElementClientRect(): TDomRect {
         const gridElementClientRect: ClientRect = this.gridElement.getBoundingClientRect();
         const windowWidth: number = window.innerWidth || document.body.clientWidth;
         const windowHeight: number = window.innerHeight || document.body.clientHeight;
@@ -282,6 +297,8 @@ export class GridCalculator {
             bottom: Math.min(windowHeight, visibleGridTop + this.gridElement.clientHeight),
             left: visibleGridLeft,
             right: Math.min(windowWidth, visibleGridLeft + this.gridElement.clientWidth),
+            height: gridElementClientRect.height,
+            width: gridElementClientRect.width
         }
     }
 
@@ -305,5 +322,34 @@ export class GridCalculator {
             side = leftMarker === null ? Side.Left : Side.Right;
         }
         return { item, side };
+    }
+
+    public calculateWindowRect(): TDomRect {
+        return {
+            bottom: 0,
+            height: document.body.clientHeight,
+            width: document.body.clientWidth,
+            left: 0,
+            right: 0,
+            scrollLeft: document.documentElement.scrollLeft,
+            scrollTop: document.documentElement.scrollTop,
+            scrollHeight: document.body.scrollHeight,
+            scrollWidth: document.body.scrollWidth,
+            top: 0
+        }
+    }
+
+    public calculateGridVisiblePageRect(windowRect: TDomRect): TDomRect {
+        const gridClientRect: ClientRect = this.gridElement.getBoundingClientRect();
+        const left: number = gridClientRect.left + windowRect.scrollLeft + this.gridScrollableElement.scrollLeft;
+        const top: number = gridClientRect.top + windowRect.scrollTop + this.gridScrollableElement.scrollTop;
+        return {
+            bottom: windowRect.height - top - this.gridScrollableElement.clientHeight,
+            height: this.gridScrollableElement.clientHeight,
+            width: this.gridScrollableElement.clientWidth,
+            left,
+            right: windowRect.width - left - this.gridScrollableElement.clientWidth,
+            top
+        };
     }
 }

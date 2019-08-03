@@ -9,9 +9,9 @@ import { smoothTranslate } from '../common/utils/smooth-translate/smoothTranslat
 import { TTranslate } from '../common/utils/smooth-translate/structures/TTranslate';
 import { Utils } from '../common/utils/Utils';
 import { TDragViewportParams } from '../List/structures/TDragViewportParams';
+import { IGridHandlers } from './interfaces/IGridHandlers';
 import GridAttributeHooks from './structures/GridAttributeHooks';
 import { Side } from './structures/Side';
-import { TExternalDragState } from './structures/TExternalDragState';
 import { TGridDimensions } from './structures/TGridDimensions';
 import { TGridDragState } from './structures/TGridDragState';
 import { TGridItemDimensions } from './structures/TGridItemDimensions';
@@ -22,6 +22,7 @@ import { TGridMapData } from './structures/TGridMapData';
 import { TGridParams } from './structures/TGridParams';
 import { TGridView } from './structures/TGridView';
 import { GridCalculator } from './utils/GridCalculator/GridCalculator';
+import { GridExternalDragHandler } from './utils/GridExternalDragHandler/GridExternalDragHandler';
 import { GridUtils } from './utils/GridUtils/GridUtils';
 
 export class Grid {
@@ -37,7 +38,7 @@ export class Grid {
     private gridItemObservers: WeakMap<HTMLElement, MutationObserver>;
     private gridItemDimensions: WeakMap<HTMLElement, TGridItemDimensions>;
     private dragState: TGridDragState | null = null;
-    private externalDragState: TExternalDragState | null = null;
+    private externalDragHandler: GridExternalDragHandler;
 
     constructor(container: HTMLElement, scrollableContainer: HTMLElement, params: TGridParams) {
         this.gridScrollableElement = scrollableContainer;
@@ -57,7 +58,7 @@ export class Grid {
     public clear(): void {
         this.pointerEventHandler.flushAll();
         if (this.allowDynamicClassChange) {
-            Array.from(this.gridElement.children)
+            this.getItemsList()
                 .forEach((child: HTMLElement) => this.gridItemObservers.get(child).disconnect());
         }
         this.gridElement.innerHTML = '';
@@ -85,6 +86,7 @@ export class Grid {
         const gridTemplate: string = require('./grid.tpl.html');
         this.gridElement = Utils.createElementFromTemplate(gridTemplate);
         this.gridCalculator = new GridCalculator(this.gridElement, container, scrollableContainer, params);
+        this.externalDragHandler = this.createExternalGridHandler();
         this.setGridTemplateColumns();
         this.setGridGaps();
         container.append(this.gridElement);
@@ -96,6 +98,20 @@ export class Grid {
         }
     }
 
+    private createExternalGridHandler(): GridExternalDragHandler {
+        return new GridExternalDragHandler({
+            gridCalculator: this.gridCalculator,
+            addItemWithClass: this.addItemWithClass.bind(this),
+            gridElement: this.gridElement,
+            pointerEventHandler: this.pointerEventHandler,
+            getGridItemDimensions: () => this.gridItemDimensions,
+            getItemsList: this.getItemsList.bind(this),
+            onDragStart: this.onDragStart.bind(this),
+            onDragTerminate: this.onDragTerminate.bind(this),
+            removeItem: this.removeItem.bind(this)
+        })
+    }
+
     private createPlaceholderElement(): HTMLElement {
         const template: string = require('./templates/placeholder.tpl.html');
         const placeholderElement: HTMLElement = Utils.createElementFromTemplate(template);
@@ -103,9 +119,13 @@ export class Grid {
         return placeholderElement;
     }
 
-    public addItemWithClass(content: HTMLElement): void {
+    public addItemWithClass(content: HTMLElement, position?: number): void {
         const item: HTMLElement = this.createItem(content);
-        this.gridElement.append(item);
+        if (position >= 0) {
+            this.gridElement.insertBefore(item, this.gridElement.children[position]);
+        } else {
+            this.gridElement.append(item);
+        }
         const itemProperties: TGridItemProperties = GridUtils.getGridItemPropertiesFromStyles(content, this.gridCalculator.getColumnCount());
         this.gridItemDimensions.set(item, { colspan: itemProperties.colspan, rowspan: itemProperties.rowspan });
         this.setGridItemStyles(item, itemProperties.rowspan, itemProperties.colspan);
@@ -114,8 +134,8 @@ export class Grid {
         }
     }
 
-    public removeItem(index: number): void {
-        const item: HTMLElement = this.gridElement.children[index] as HTMLElement;
+    public removeItem(position: number): void {
+        const item: HTMLElement = this.gridElement.children[position] as HTMLElement;
         if (this.allowDynamicClassChange) {
             this.gridItemObservers.get(item).disconnect();
             this.gridItemObservers.delete(item);
@@ -173,6 +193,7 @@ export class Grid {
             originalDragItemsList: itemsList,
             gridView: gridView,
             containerScrollCallbacks: null,
+            itemsTranslationUnsubscribeCallback: null,
             isTranslating: false,
             draggedElementTranslations
         }
@@ -246,16 +267,16 @@ export class Grid {
 
         const scrollStepReducer: number = 0.1;
         let horizontalIncrement: number | null = null;
-        if (GridUtils.isBetweenColumns(event.clientX, visibleScrollableClientRect.left, visibleScrollableClientRect.left + horizontalScrollTriggerWidth)) {
+        if (GridUtils.isBetween(event.clientX, visibleScrollableClientRect.left, visibleScrollableClientRect.left + horizontalScrollTriggerWidth)) {
             horizontalIncrement = -(horizontalScrollTriggerWidth - (event.clientX - visibleScrollableClientRect.left)) * scrollStepReducer;
-        } else if (GridUtils.isBetweenColumns(event.clientX, visibleScrollableClientRect.right - horizontalScrollTriggerWidth, visibleScrollableClientRect.right)) {
+        } else if (GridUtils.isBetween(event.clientX, visibleScrollableClientRect.right - horizontalScrollTriggerWidth, visibleScrollableClientRect.right)) {
             horizontalIncrement = (horizontalScrollTriggerWidth - (visibleScrollableClientRect.right - event.clientX)) * scrollStepReducer;
         }
 
         let verticalIncrement: number | null = null;
-        if (GridUtils.isBetweenColumns(event.clientY, visibleScrollableClientRect.top, visibleScrollableClientRect.top + verticalScrollTriggerHeight)) {
+        if (GridUtils.isBetween(event.clientY, visibleScrollableClientRect.top, visibleScrollableClientRect.top + verticalScrollTriggerHeight)) {
             verticalIncrement = -(verticalScrollTriggerHeight - (event.clientY - visibleScrollableClientRect.top)) * scrollStepReducer;
-        } else if (GridUtils.isBetweenColumns(event.clientY, visibleScrollableClientRect.bottom - verticalScrollTriggerHeight, visibleScrollableClientRect.bottom)) {
+        } else if (GridUtils.isBetween(event.clientY, visibleScrollableClientRect.bottom - verticalScrollTriggerHeight, visibleScrollableClientRect.bottom)) {
             verticalIncrement = (verticalScrollTriggerHeight - (visibleScrollableClientRect.bottom - event.clientY)) * scrollStepReducer;
         }
 
@@ -305,6 +326,24 @@ export class Grid {
         return currentItemTranslations;
     }
 
+    private onDragTerminate(): void {
+        if (!this.dragState) {
+            return;
+        }
+        this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onDragMove);
+        this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
+        if (this.dragState.containerScrollCallbacks) {
+            this.dragState.containerScrollCallbacks.cancel();
+        }
+        if (this.dragState.itemsTranslationUnsubscribeCallback) {
+            this.dragState.itemsTranslationUnsubscribeCallback();
+        }
+        Array.from(this.gridElement.children).forEach((item: Element) => this.removeTranslation(item as HTMLElement));
+        this.gridElement.removeChild(this.placeholderElement);
+        this.removePlaceholderStyles();
+        this.dragState = null;
+    }
+
     private onDragEnd(_event: SyntheticEvent): void {
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionMove, this.onDragMove);
         this.pointerEventHandler.removeEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
@@ -329,6 +368,7 @@ export class Grid {
         const movedItem: HTMLElement = this.gridElement.children.item(fromIndex) as HTMLElement;
         const rightNode: HTMLElement = this.gridElement.children.item(newRightIndex) as HTMLElement;
         this.attachDraggedElement(movedItem, rightNode);
+        this.externalDragHandler.onExternalDragEndSuccess();
         this.dragState = null;
     }
 
@@ -380,15 +420,25 @@ export class Grid {
     private detachDraggedElement(draggedElement: HTMLElement): void {
         draggedElement.after(this.placeholderElement);
         draggedElement.style.position = 'fixed';
+        draggedElement.style.opacity = '0.5';
+    }
+
+    private getItemsList(): HTMLElement[] {
+        return Array.from(this.gridElement.children) as HTMLElement[];
     }
 
     private attachDraggedElement(draggedElement: HTMLElement, rightNode: HTMLElement): void {
         this.gridElement.insertBefore(draggedElement, rightNode);
         this.removeDraggedElementStyles();
         this.dragState.draggedElement.style.position = '';
+        draggedElement.style.opacity = '';
     }
 
     private getClosestGridItem(fromElement: HTMLElement): HTMLElement | null {
         return fromElement.closest(`[${GridAttributeHooks.item}]`) as HTMLElement;
+    }
+
+    public getGridHandlers(): IGridHandlers {
+        return this.externalDragHandler.getGridHandlers();
     }
 }

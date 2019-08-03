@@ -1,9 +1,12 @@
-import { TTranslate } from './structures/TTranslate';
+import { IUnsubscribeCallback } from '../../interfaces/IUnsubscribeCallback';
 import { easeInOutCubic } from '../easingFunctions';
+import { TTranslate } from './structures/TTranslate';
 
-export function smoothTranslate(translations: TTranslate[], duration: number, onEndCallback?: () => void): void {
+export function smoothTranslate(translations: TTranslate[], duration: number, onEndCallback?: () => void): IUnsubscribeCallback {
 
+    let isCancelled: boolean = false;
     let longestDistance: number = 0;
+    let translateRequestReference: number;
     translations.forEach(translation => {
         const xDistance: number = Math.abs(translation.fromX - translation.toX);
         const yDistance: number = Math.abs(translation.fromY - translation.toY);
@@ -13,6 +16,7 @@ export function smoothTranslate(translations: TTranslate[], duration: number, on
     const startTime: number = new Date().getTime();
     const easeFunction: (t: number) => number = easeInOutCubic;
     translate();
+    return () => isCancelled = true;
 
     function translate(): void {
         const now: number = new Date().getTime();
@@ -25,10 +29,14 @@ export function smoothTranslate(translations: TTranslate[], duration: number, on
             const newTranslateY: number = translation.fromY + positionProgress * (translation.toY - translation.fromY);
             translation.element.style.transform = buildTranslationStyle(newTranslateX, newTranslateY);
         });
+        if (isCancelled) {
+            cancelAnimationFrame(translateRequestReference);
+            return;
+        }
         if (timeProgress !== 1) {
-            requestAnimationFrame(translate);
+            translateRequestReference = requestAnimationFrame(translate);
         } else {
-            if (onEndCallback) {
+            if (onEndCallback && !isCancelled) {
                 requestAnimationFrame(() => onEndCallback());
             }
         }

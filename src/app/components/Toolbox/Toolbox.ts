@@ -1,11 +1,11 @@
 import { TCoords } from '../../../common/structures/TCoords';
-import { Utils } from '../../../common/utils/Utils';
-import ToolboxAttributeHooks from './structures/ToolboxAttributeHooks';
-import { ToolboxItemFactory } from './factories/ToolboxItemFactory/ToolboxItemFactory';
 import { PointerEventHandler } from '../../../common/utils/pointer-event-handler/PointerEventHandler';
 import { PointerEventType } from '../../../common/utils/pointer-event-handler/structures/PointerEventType';
-import { TToolboxItem } from './structures/TToolboxItem';
+import { Utils } from '../../../common/utils/Utils';
 import { IGridHandlers } from '../../../Grid/interfaces/IGridHandlers';
+import { ToolboxItemFactory } from './factories/ToolboxItemFactory/ToolboxItemFactory';
+import ToolboxAttributeHooks from './structures/ToolboxAttributeHooks';
+import { TToolboxItem } from './structures/TToolboxItem';
 
 export class Toolbox {
 
@@ -58,7 +58,7 @@ export class Toolbox {
         this.originalDraggedElement.after(this.draggedElement);
         const toolboxItem: TToolboxItem = this.toolboxItems.get(this.originalDraggedElement);
         toolboxItem.dropzoneCallbacks.toggleDropzone(true);
-        toolboxItem.dropzoneCallbacks.onExternalDragStart(this.draggedElement, toolboxItem.dropzoneContent.cloneNode(true) as HTMLElement);
+        toolboxItem.dropzoneCallbacks.onExternalDragStart(this.draggedElement, toolboxItem.dropzoneContent.cloneNode(true) as HTMLElement, (i) => console.log(`Insert ${i}`));
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionMove, this.onDragMove);
         this.pointerEventHandler.addEventListener(document, PointerEventType.ActionEnd, this.onDragEnd);
     }
@@ -89,6 +89,7 @@ export class Toolbox {
         this.draggedElement.remove();
         this.draggedElement = null;
         this.originalDraggedElement = null;
+        toolboxItem.dropzoneCallbacks.onExternalDragEnd();
     }
 
     private setTranslation(element: HTMLElement, x: number, y: number): void {

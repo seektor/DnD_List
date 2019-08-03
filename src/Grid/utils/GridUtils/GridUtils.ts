@@ -21,7 +21,7 @@ export class GridUtils {
         return newItemList;
     }
 
-    public static isBetweenColumns(value: number, min: number, max: number): boolean {
+    public static isBetween(value: number, min: number, max: number): boolean {
         return value >= min && value < max;
     }
 }

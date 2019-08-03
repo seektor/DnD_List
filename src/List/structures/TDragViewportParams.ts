@@ -1,5 +1,5 @@
 import { TCoords } from "../../common/structures/TCoords";
-import { TClientRect } from "../../common/structures/TClientRect";
+import { TDomRect } from "../../common/structures/TDomRect";
 
 export interface TDragViewportParams {
     initialCoordinates: TCoords;
@@ -9,7 +9,7 @@ export interface TDragViewportParams {
     initialScrollableLeft: number;
     initialGridLeft: number;
     initialGridTop: number;
-    visibleScrollableClientRect: TClientRect;
+    visibleScrollableClientRect: TDomRect;
     horizontalScrollTriggerWidth: number;
     verticalScrollTriggerHeight: number;
 }

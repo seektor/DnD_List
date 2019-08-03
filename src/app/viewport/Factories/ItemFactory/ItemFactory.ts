@@ -37,6 +37,7 @@ export class ItemFactory {
         const itemElement: HTMLElement = this.Item(firstBodyColor, secondBodyColor);
         const bodyElement: HTMLElement = Utils.getElementByAttribute(itemElement, ItemFactoryAttributeHooks.body);
         const input = document.createElement('input');
+        input.placeholder = 'Type here';
         input.value = text;
         if (inputBorderColor) {
             input.style.borderColor = inputBorderColor;
